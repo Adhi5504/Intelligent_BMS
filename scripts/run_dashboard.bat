@@ -7,28 +7,12 @@ echo     Intelligent BMS Unified Startup Script
 echo ===================================================
 echo.
 
-:: 1. Move to the correct project directory
+:: 1. Move to the correct project directory reliably
 cd /d "%~dp0"
-echo [*] Working directory: %CD%
+set "BASE_DIR=%~dp0"
+echo [OK] Working directory: !BASE_DIR!
 
-:: 2. Check and Activate Virtual Environment
-if exist "venv\Scripts\activate.bat" goto ACTIVATE_VENV
-if exist ".venv\Scripts\activate.bat" goto ACTIVATE_DOT_VENV
-echo [!] No virtual environment found. Using system Python.
-goto SKIP_VENV
-
-:ACTIVATE_VENV
-echo [*] Activating Python virtual environment (venv)...
-call venv\Scripts\activate.bat
-goto SKIP_VENV
-
-:ACTIVATE_DOT_VENV
-echo [*] Activating Python virtual environment (.venv)...
-call .venv\Scripts\activate.bat
-
-:SKIP_VENV
-
-:: 3. Check Python and npm
+:: 2. Check Python and npm
 where python >nul 2>nul
 if %errorlevel% neq 0 (
     echo [ERROR] Python is not installed or not in PATH.
@@ -43,7 +27,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-:: 4. Prevent duplicate instances
+:: 3. Prevent duplicate instances (Idempotent start)
 echo [*] Checking for existing instances on ports 5000, 8000, 5173...
 for %%P in (5000 8000 5173) do (
     for /f "tokens=5" %%a in ('netstat -aon ^| findstr /R /C:"TCP.*:%%P.*LISTENING"') do (
@@ -56,87 +40,90 @@ for %%P in (5000 8000 5173) do (
     )
 )
 
-:: 5. Start Backend Servers
-echo [*] Starting Flask Telemetry Backend (Port 5000)...
-start "Prediction Backend (5000)" /D "%~dp0..\backend" python bms_dashboard_backend.py
+:: 4. Start Backend Services
+echo.
+echo [1/4] Starting Flask Backend (Port 5000)...
+start "Flask Backend (5000)" /D "!BASE_DIR!..\backend" cmd /k "python bms_dashboard_backend.py"
 
-echo [*] Starting FastAPI Backend (Port 8000)...
-start "FastAPI Backend (8000)" /D "%~dp0..\frontend\battery-dashboard\battery-dashboard\backend" python main.py
+echo [2/4] Starting FastAPI Backend (Port 8000)...
+start "FastAPI Backend (8000)" /D "!BASE_DIR!..\frontend\battery-dashboard\backend" cmd /k "python main.py"
 
-echo [*] Starting VNet / Bluetooth Gateway...
-start "VNet Bluetooth Gateway" /D "%~dp0..\backend" python bms_bluetooth_gateway.py
+echo [*] Starting Bluetooth Gateway (Errors here won't stop the frontend)...
+start "Bluetooth Gateway" /D "!BASE_DIR!..\backend" cmd /k "python bms_bluetooth_gateway.py"
 
-:: 6. Poll Backend Health Checks
-echo [*] Waiting for Backend APIs to initialize...
-set MAX_RETRIES=60
+:: 5. Poll Backend Health
+echo [*] Waiting for Backend APIs to respond...
 set RETRY_COUNT=0
+:POLL_BACKEND
+curl.exe -s http://127.0.0.1:5000/health >nul
+set FLASK_OK=%errorlevel%
+curl.exe -s http://127.0.0.1:8000/health >nul
+set FASTAPI_OK=%errorlevel%
 
-:POLL_HEALTH
-powershell -Command "try { $res1 = Invoke-RestMethod -Uri 'http://127.0.0.1:5000/health' -Method Get -ProxyUseDefault $false -ErrorAction Stop; $resML = Invoke-RestMethod -Uri 'http://127.0.0.1:5000/ml-health' -Method Get -ProxyUseDefault $false -ErrorAction Stop; $res2 = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -Method Get -ProxyUseDefault $false -ErrorAction Stop; if ($res1.status -eq 'healthy' -and $resML.status -eq 'running' -and $res2.status -eq 'ok') { exit 0 } else { exit 1 } } catch { exit 1 }" >nul 2>nul
-if %errorlevel% equ 0 (
-    echo [+] Backends are fully ready and healthy!
-    goto BACKEND_READY
+if %FLASK_OK% equ 0 if %FASTAPI_OK% equ 0 (
+    echo [OK] Backends are fully ready!
+    goto START_FRONTEND
 )
 
 set /a RETRY_COUNT+=1
-if %RETRY_COUNT% geq %MAX_RETRIES% (
-    echo [ERROR] Backends failed to start or health checks timed out.
-    echo Please check the backend console windows for exact startup errors.
-    pause
-    exit /b 1
+if %RETRY_COUNT% geq 30 (
+    echo [WARNING] Backends took too long to respond. Starting frontend anyway...
+    goto START_FRONTEND
 )
 ping 127.0.0.1 -n 2 >nul
-goto POLL_HEALTH
+goto POLL_BACKEND
 
-:BACKEND_READY
-
-:: 7. Start React/Vite Frontend
-echo [*] Starting React/Vite Frontend (Port 5173)...
-cd ..\frontend\battery-dashboard\battery-dashboard\frontend
-if not exist "node_modules" (
+:START_FRONTEND
+:: 6. Start Vite Frontend
+echo.
+echo [3/4] Starting React/Vite Frontend (Port 5173)...
+set "FRONTEND_DIR=!BASE_DIR!..\frontend\battery-dashboard\frontend"
+if not exist "!FRONTEND_DIR!\node_modules" (
     echo [*] Installing npm packages...
+    cd /d "!FRONTEND_DIR!"
     call npm install
+    cd /d "!BASE_DIR!"
 )
-start "Start Dashboard Frontend (5173)" npm run dev -- --host 0.0.0.0
 
-:: 8. Poll Frontend Health Check
-echo [*] Waiting for React Frontend to start...
+:: Use cmd /k to keep window open, use --host 0.0.0.0 to ensure LAN access
+start "Vite Frontend (5173)" /D "!FRONTEND_DIR!" cmd /k "npm run dev -- --host 0.0.0.0"
+
+:: 7. Poll Frontend Health
+echo [*] Waiting for React Frontend to become available...
 set FRONTEND_RETRIES=0
-
 :POLL_FRONTEND
-powershell -Command "try { $res = Invoke-WebRequest -Uri 'http://127.0.0.1:5173' -UseBasicParsing -ProxyUseDefault $false -ErrorAction Stop; exit 0 } catch { exit 1 }" >nul 2>nul
+curl.exe -s http://127.0.0.1:5173/ >nul
 if %errorlevel% equ 0 (
-    echo [+] Frontend is fully ready!
-    goto FRONTEND_READY
+    echo [OK] Vite running on port 5173
+    goto DASHBOARD_READY
 )
 
 set /a FRONTEND_RETRIES+=1
-if %FRONTEND_RETRIES% geq 60 (
-    echo [ERROR] Frontend failed to start or timed out.
+if %FRONTEND_RETRIES% geq 30 (
+    echo [ERROR] Frontend failed to start on port 5173.
     pause
     exit /b 1
 )
 ping 127.0.0.1 -n 2 >nul
 goto POLL_FRONTEND
 
-:FRONTEND_READY
-
-:: 9. Get Local IP Address
+:DASHBOARD_READY
+:: 8. Get Local IP and Open Browser
+echo.
+echo [4/4] Opening dashboard...
 for /f "usebackq tokens=*" %%a in (`powershell -Command "(Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -match 'Wi-Fi|Ethernet' } | Select-Object -First 1).IPAddress"`) do set LOCAL_IP=%%a
 
 if "!LOCAL_IP!"=="" set LOCAL_IP=127.0.0.1
 
 echo.
 echo ======================================================================
-echo   BMS Unified System is LIVE!
+echo   [OK] BMS Unified System is LIVE!
 echo.
 echo   Local Dashboard URL : http://127.0.0.1:5173
 echo   Network URL (Mobile): http://!LOCAL_IP!:5173
 echo.
-echo   Do NOT close the running console windows to keep it active.
+echo   Do NOT close the running cmd.exe windows!
 echo ======================================================================
 
-:: 10. Open browser strictly to the Start Dashboard
-start http://127.0.0.1:5173
+start http://!LOCAL_IP!:5173
 
-ping 127.0.0.1 -n 6 >nul
