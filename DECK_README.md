@@ -4,8 +4,8 @@ Two cuts of the same material, sharing one design system:
 
 | File | Slides | Talk time | For |
 |---|---|---|---|
-| `AI_PBMS_8Slide.pptx` | 8 | ~5.4 min | the whole story, condensed |
-| `AI_PBMS_Full_Deck.pptx` | 20 | ~12.6 min | the same material, room to breathe |
+| `AI_PBMS_8Slide.pptx` | 9 | ~6.2 min | the whole story, condensed (8 + references) |
+| `AI_PBMS_Full_Deck.pptx` | 21 | ~13.3 min | the same material, room to breathe |
 
 The 8-slide cut is not a subset — it carries all twenty slides' content at two to
 three topics per slide, with a two-column bullet block and stacked visuals.
@@ -38,7 +38,26 @@ figures and the PPTX shapes; `deck/_helpers.py` holds the shared slide primitive
 model · 3. Pipeline, features and the balanced training set · 4. **The six-model
 benchmark** · 5. Per-class performance, confidence bands and the OOD gate ·
 6. Hardware tiers and end-to-end system · 7. The platform, driving context and
-cycle prognosis · 8. Multi-chemistry adaptation and roadmap
+cycle prognosis · 8. Multi-chemistry adaptation and roadmap · 9. **References**
+
+## References (slide 9 / slide 21)
+
+The five literature entries are taken **verbatim** from the literature slide of
+the supplied source deck (`6c4007b5-ppt-_cat.pdf`, page 14) — titles, venues and
+DOIs unchanged. Nothing was added to that list.
+
+The other two blocks are sourced from this repository and this machine, not
+invented: the **primary sources** are the five datasheet PDFs actually filed
+under `cell datasheet/` (LG INR21700-M50, DMEGC INR21700-45E, Panasonic
+NCR18650B, P3 3232 LFP 26650, JBD SP24S007 V1.1), and the **stack** line lists
+the library versions the benchmark actually ran against.
+
+The four **method** citations (Chen & Guestrin 2016; Liu, Ting & Zhou 2008;
+Vaswani et al. 2017; Pedregosa et al. 2011) are the canonical papers for
+XGBoost, Isolation Forest, positional encoding and scikit-learn. They are given
+in author/title/venue/year form with **no DOI**, because I did not want to risk
+transcribing a link I could not verify from here. If you want DOIs on those
+four, add them and I will format them to match.
 
 ## The 20-slide running order
 
