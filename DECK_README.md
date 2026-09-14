@@ -70,14 +70,41 @@ held-out split with the same 51 features (`deck/bench_*.py`,
 | SVM (RBF) | 88.53% | 0.807 | 0.568 ms | 2.82 MB | 20k subsample, trained in 3s |
 | Rule-based BMS | 22.09% | 0.224 | 0.005 ms | 0.00 MB | project's own NMC thresholds; no Weak Cell rule exists |
 
-The **Transformer beats XGBoost by 0.92 points** and is smaller. The deck still
-recommends XGBoost, and says why on the slide: the Transformer needs a 60-row
-lookback (a full minute of buffered data at 1 Hz before its first prediction),
-a torch runtime on the Pi, and gives no feature attribution. XGBoost predicts
-from one row instantly and is inspectable. That is an engineering decision, and
-the deck now presents it as one rather than as an accuracy win. If you would
-rather ship the Transformer, the numbers support it — say so and I will reframe
-the slide.
+The **Transformer beats XGBoost by 0.92 points**. Slide 4 does not claim
+otherwise. It argues the deployment constraints instead, and every one of them
+is measured (`fig_deployment_tradeoff.png`):
+
+| Constraint | XGBoost | Transformer |
+|---|---|---|
+| Cold start | 1 row → first prediction at t = 1 s | 60 rows → blind for 60 s at 1 Hz |
+| Runtime on the Pi | xgboost, 239 MB | torch, 1,199 MB (5×) |
+| Input shape | any row, any time | positional encoding pins it to exactly 60 |
+| Attribution | per-feature gain, auditable | attention only, not per-feature |
+| In-browser retrain | ships today | not feasible on a Pi |
+
+That is a sound engineering case and it survives scrutiny. **Two related claims
+do not, and are deliberately absent from the deck:**
+
+*"XGBoost is more accurate."* It is not, on this data — 94.19% vs 95.11%, printed
+in the same table. Writing the opposite next to those numbers would discredit
+every other figure on the slide.
+
+*"The Transformer needs a heavy dataset."* Tested directly
+(`deck/bench_data_efficiency.py`): both models trained on 5/10/25/50/100% of the
+same split, scored on the same untouched test set.
+
+| Train rows | XGBoost | Transformer | XGBoost − Transformer |
+|---|---|---|---|
+| 7,000 | 72.27% | 74.20% | -1.93 |
+| 14,000 | 82.26% | 84.06% | -1.80 |
+| 35,000 | 86.11% | 88.53% | -2.42 |
+| 70,000 | 89.28% | 93.06% | -3.78 |
+| 140,000 | 91.70% | 94.80% | -3.10 |
+
+The Transformer is ahead at **every** data scale, including 7,000 rows. It is
+also only 74,630 parameters and 0.31 MB — smaller on disk than XGBoost's 1.40 MB.
+"Heavy" is true of the *runtime* (torch) and the *input window*, not of the model
+or its data appetite. The deck says it that way.
 
 Two caveats stated on the slide itself: latency is measured on this 4-core
 container, **not on a Pi 5**; and the RBF SVM was trained on a stratified 20k
