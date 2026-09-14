@@ -95,11 +95,27 @@ is measured (`fig_deployment_tradeoff.png`):
 
 | Constraint | XGBoost | Transformer |
 |---|---|---|
-| Cold start | 1 row → first prediction at t = 1 s | 60 rows → blind for 60 s at 1 Hz |
+| Buffer today | 60 rows — `BUFFER_MAX_SIZE` | 60 rows — same buffer |
+| Minimum it needs | **10 rows** — deepest feature is `rolling(10)` | **60 rows** — fixed by the weights |
+| What the model consumes | the last row only, 1 × 51 | the whole window, 60 × 51 |
 | Runtime on the Pi | xgboost, 239 MB | torch, 1,199 MB (5×) |
-| Input shape | any row, any time | positional encoding pins it to exactly 60 |
 | Attribution | per-feature gain, auditable | attention only, not per-feature |
 | In-browser retrain | ships today | not feasible on a Pi |
+
+**Corrected after review:** an earlier version of this slide claimed XGBoost ran
+with "1 row, no buffer". That was wrong — `backend/predict_fault.py:157` requires
+exactly 60 rows and `bms_dashboard_backend.py` keeps `BUFFER_MAX_SIZE = 60`, so
+*both* models sit behind the same buffer in the deployed pipeline. The real
+distinction, which the slide now states, is **why** each one needs it:
+
+- XGBoost predicts on `X_scaled[-1]` — the last row only. Every history-dependent
+  feature is either a `diff()` (1 lag) or `rolling(window=10)`, so 10 rows of
+  context reproduce the final row's 51 features **bit-identically**. Verified:
+  features computed from 60, 40, 20 and 10 rows agree to < 1e-14, and break at 9.
+  The 60 is a constant we chose and can shorten.
+- The Transformer's positional encoding is a `(1 × 60 × 64)` learned weight —
+  3,840 of its 74,630 parameters. The 60 is inside the model and cannot change
+  without retraining.
 
 That is a sound engineering case and it survives scrutiny. **Two related claims
 do not, and are deliberately absent from the deck:**

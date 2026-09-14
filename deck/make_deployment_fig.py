@@ -19,13 +19,18 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT  = os.path.join(ROOT, "assets", "generated")
 BM   = os.path.join(ROOT, "outputs", "benchmark")
 
+# Both models run behind the same 60-row pipeline buffer today
+# (BUFFER_MAX_SIZE in bms_dashboard_backend.py). The difference is whether
+# that 60 is a constant we chose or a shape baked into the weights.
 ROWS = [
-    ("Cold start",          "1 row  ·  first call at t = 1 s",
-                            "60 rows  ·  blind for 60 s", True),
+    ("Buffer today",        "60 rows  ·  pipeline constant",
+                            "60 rows  ·  same buffer", False),
+    ("Minimum it needs",    "10 rows  ·  rolling(10) is deepest",
+                            "60 rows  ·  fixed by the weights", True),
+    ("What the model eats", "the last row  ·  1 × 51",
+                            "the whole window  ·  60 × 51", True),
     ("Runtime on the Pi",   "xgboost — 239 MB",
                             "torch — 1,199 MB  (5×)", True),
-    ("Fixed input shape",   "any row, any time",
-                            "positional encoding pins it to 60", True),
     ("Feature attribution", "per-feature gain, auditable",
                             "attention only, not per-feature", True),
     ("In-browser retrain",  "ships today on the dashboard",
@@ -34,38 +39,41 @@ ROWS = [
 
 
 def main():
-    fig, ax = plt.subplots(figsize=(10.2, 3.55))
-    ax.set_xlim(0, 20.4); ax.set_ylim(0, 7.5); ax.axis("off"); ax.grid(False)
+    fig, ax = plt.subplots(figsize=(10.2, 3.95))
+    ax.set_xlim(0, 20.4); ax.set_ylim(0, 8.3); ax.axis("off"); ax.grid(False)
 
-    ax.text(0.25, 7.08, "Why XGBoost ships anyway — the constraints that actually decided it",
+    ax.text(0.25, 7.90, "Why XGBoost ships — both buffer 60 rows, only one of them has to",
             ha="left", va="center", fontsize=12.5, fontweight="bold", color=INK)
-    ax.text(8.05, 6.32, "XGBoost", ha="center", va="center", fontsize=11,
+    ax.text(8.05, 7.16, "XGBoost", ha="center", va="center", fontsize=11,
             fontweight="bold", color=ACCENT)
-    ax.text(15.1, 6.32, "Transformer", ha="center", va="center", fontsize=11,
+    ax.text(15.1, 7.16, "Transformer", ha="center", va="center", fontsize=11,
             fontweight="bold", color=MUTED)
 
-    y = 5.42
+    y = 6.30
     for label, a, b, win in ROWS:
         ax.add_patch(FancyBboxPatch((5.05, y - 0.40), 6.0, 0.82,
                      boxstyle="round,pad=0,rounding_size=0.10",
-                     facecolor=ACCENT_TINT, edgecolor=ACCENT, linewidth=1.2, zorder=3))
+                     facecolor=ACCENT_TINT if win else PANEL,
+                     edgecolor=ACCENT if win else HAIRLINE,
+                     linewidth=1.2 if win else 1.0, zorder=3))
         ax.add_patch(FancyBboxPatch((11.85, y - 0.40), 6.0, 0.82,
                      boxstyle="round,pad=0,rounding_size=0.10",
                      facecolor=PANEL, edgecolor=HAIRLINE, linewidth=1.0, zorder=3))
         ax.text(4.30, y, label, ha="right", va="center", fontsize=10,
                 fontweight="bold", color=INK)
         ax.text(8.05, y, a, ha="center", va="center", fontsize=9.4,
-                color=ACCENT, zorder=5)
+                color=ACCENT if win else MUTED, zorder=5)
         ax.text(14.85, y, b, ha="center", va="center", fontsize=9.4,
                 color=MUTED, zorder=5)
-        ax.text(4.72, y, "✓", ha="center", va="center", fontsize=13,
-                fontweight="bold", color=ACCENT, zorder=5)
+        if win:
+            ax.text(4.72, y, "✓", ha="center", va="center", fontsize=13,
+                    fontweight="bold", color=ACCENT, zorder=5)
         y -= 1.02
 
-    ax.text(0.25, 0.24,
-            "Transformer is 74,630 parameters, 3,840 of them positional encoding — "
-            "that encoding is what fixes the input at exactly 60 rows.",
-            ha="left", va="center", fontsize=8.4, color=MUTED, style="italic")
+    ax.text(0.25, 0.22,
+            "Transformer: 3,840 positional-encoding parameters shaped (1 × 60 × 64) — the 60 is in the weights.   "
+            "XGBoost: 60 is BUFFER_MAX_SIZE, a constant we chose.",
+            ha="left", va="center", fontsize=8.2, color=MUTED, style="italic")
     p = os.path.join(OUT, "fig_deployment_tradeoff.png")
     fig.savefig(p, facecolor=theme.BG, transparent=False)
     plt.close(fig)
