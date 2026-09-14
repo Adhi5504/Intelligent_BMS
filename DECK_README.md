@@ -1,16 +1,38 @@
-# AI_PBMS_8Slide.pptx — build notes
+# AI-PBMS decks — build notes
 
-8 slides, 16:9 (13.333 × 7.5 in), light technical theme, speaker notes on every
-slide. Rebuild everything with:
+Two cuts of the same material, sharing one design system:
+
+| File | Slides | Talk time | For |
+|---|---|---|---|
+| `AI_PBMS_8Slide.pptx` | 8 | ~4.6 min | the short pitch |
+| `AI_PBMS_Full_Deck.pptx` | 20 | ~12.1 min | the full technical review |
+
+Both are 16:9 (13.333 × 7.5 in), light technical theme, with a speaker note on
+every slide. Rebuild everything with:
 
 ```bash
-python3 deck/make_charts.py     # data-driven figures  -> assets/generated/
-python3 deck/make_diagrams.py   # vector schematics    -> assets/generated/
-python3 deck/build_deck.py      # assembles            -> AI_PBMS_8Slide.pptx
+python3 deck/make_charts.py       # figures batch 1   -> assets/generated/
+python3 deck/make_charts2.py      # figures batch 2   -> assets/generated/
+python3 deck/make_diagrams.py     # vector schematics -> assets/generated/
+python3 deck/make_ui.py           # UI mockups + flow -> assets/generated/
+python3 deck/build_deck.py        # -> AI_PBMS_8Slide.pptx
+python3 deck/build_deck_full.py   # -> AI_PBMS_Full_Deck.pptx
 ```
 
 `deck/theme.py` holds the single palette/font definition shared by the matplotlib
-figures and the PPTX shapes.
+figures and the PPTX shapes; `deck/_helpers.py` holds the shared slide primitives.
+
+## The 20-slide running order
+
+1. Title · 2. Why we built the dataset · 3. **What the logging showed** ·
+4. Why 8S2P · 5. 1RC → 2RC and OCV · 6. Data pipeline and labelling ·
+7. **Feature engineering** · 8. **Training-set construction** · 9. Why XGBoost ·
+10. **Per-class performance** · 11. Six classes and confidence ·
+12. **Out-of-distribution gate** · 13. Hardware tiers · 14. **End-to-end system** ·
+15. Live dashboard · 16. **Thermal and driving context** · 17. **Cycle prognosis** ·
+18. **Battery Parameters screen** · 19. Multi-chemistry engine · 20. **Roadmap**
+
+Bold = new in the 20-slide cut.
 
 ---
 
@@ -62,7 +84,14 @@ deck are dark-background MATLAB output: the 3-D module render
 deck. The measured-vs-simulated and Scope plots are the valuable ones — if you
 send the underlying time series I will regenerate them on the light theme.
 
-**5. Two numbers come from repo file sizes, not the brief.** The "~1.4 MB" and
+**5. The web-app screenshots were pasted into chat, not supplied as files**, so
+there was nothing on disk to embed. Both screens — the landing page and the
+Battery Parameters upload screen — are therefore **redrawn as vector mockups**
+(`deck/make_ui.py`) in the deck's own palette, matching the layout, copy and
+accent colours of the screenshots. Send the actual PNGs and I will swap them in;
+`build_deck_full.py` only needs the same two filenames.
+
+**6. Two numbers come from repo file sizes, not the brief.** The "~1.4 MB" and
 "~1.6 MB" in slide 4's Size column are the on-disk sizes of
 `models/bms_xgboost_model.json` (1,395,670 B) and
 `models/battery_fault_transformer.pth` (1,591,456 B). Say the word and they go.
@@ -72,6 +101,26 @@ send the underlying time series I will regenerate them on the light theme.
 ## Visual provenance
 
 ### Generated (matplotlib, 300 DPI, light theme) — `assets/generated/`
+
+Batch 2 (`deck/make_charts2.py`) is entirely measured from repository files —
+no brief numbers are involved in any of it:
+
+| File | Slide | Data source |
+|---|---|---|
+| `fig_cell_traces.png` | 3 | **Measured** — 2,400 consecutive rows of `data/bms_data_corrected (3).csv`; the 289 mV cell_v1 gap is computed from that window |
+| `fig_feature_importance.png` | 7 | **Measured** — gain importances read from `models/bms_xgboost_model.json` |
+| `fig_dataset_composition.png` | 8 | **Measured** — class and split counts from `data/augmented_telemetry_dataset.xlsx` (208,010 rows) |
+| `fig_per_class_metrics.png` | 10 | **Measured** — precision/recall/F1 derived from the same confusion matrix as slide 11 |
+| `fig_ood_panel.png` | 12 | **Measured** — `outputs/ood_evaluation_report.txt` (AUROC 0.913, 100% precision, 0% FPR, 24.5% recall) |
+| `fig_thermal_zones.png` | 16 | **Measured** — four NTC channels over the same logged window |
+| `fig_driving_modes.png` | 16 | **Measured** — `driving_mode` distribution over 155,023 rows |
+| `fig_cycle_history.png` | 17 | **Measured** — all 39 cycles in `data/cycle_history.json` |
+| `mock_landing.png` | 1 | Vector recreation of the supplied screenshot — see note 5 |
+| `mock_battery_params.png` | 18 | Vector recreation of the supplied screenshot — see note 5 |
+| `diag_system_flow.png` | 14 | Drawn — edge / service / interface data path |
+| `diag_confidence_ladder.png` | 12 | Drawn — OOD gate → classifier → confidence band |
+
+Batch 1 (`deck/make_charts.py`, `deck/make_diagrams.py`):
 
 | File | Slide | Data source |
 |---|---|---|
@@ -84,7 +133,7 @@ send the underlying time series I will regenerate them on the light theme.
 | `diag_2rc_ecm.png` | 2 | Drawn — OCV source, R0, R1‖C1, R2‖C2, values from the brief |
 | `diag_hardware.png` | 5 | Drawn — BMS → Pi 5 → Arduino R4, BLE and RUN-pin arrows |
 | `diag_configurator.png` | 8 | Drawn — datasheet → parser → sizing → tiering → thresholds → profile |
-| `diag_chemistry_tiering.png` | — | Drawn — NMC/NCA/LFP/LTO ladder. **Spare**: slide 8's second visual went to the OCV–SOC chart because the brief asked for it explicitly. Swap in `build_deck.py` if you prefer it. |
+| `diag_chemistry_tiering.png` | 19 (full deck) | Drawn — NMC/NCA/LFP/LTO ladder. Unused in the 8-slide cut, where the OCV–SOC chart takes that slot. |
 
 All figures are written with an explicit `#FFFFFF` figure and axes facecolor and
 `transparent=False`; none has a dark or transparent background.
