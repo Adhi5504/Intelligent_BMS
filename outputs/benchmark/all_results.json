@@ -1,0 +1,52 @@
+{
+  "XGBoost": {
+    "accuracy": 0.9419333333333333,
+    "macro_f1": 0.9046917000801568,
+    "latency_ms": 0.46158850000210805,
+    "size_mb": 1.39567,
+    "note": "shipped checkpoint"
+  },
+  "Random Forest": {
+    "accuracy": 0.8937333333333334,
+    "macro_f1": 0.8236112329963,
+    "latency_ms": 33.77024850001931,
+    "size_mb": 176.405417,
+    "note": "200 trees, trained in 30s"
+  },
+  "SVM (RBF)": {
+    "accuracy": 0.8853333333333333,
+    "macro_f1": 0.8070429221821137,
+    "latency_ms": 0.5677974999969138,
+    "size_mb": 2.819779,
+    "note": "20k subsample, trained in 3s"
+  },
+  "LSTM": {
+    "accuracy": 0.8702666666666666,
+    "macro_f1": 0.7757391364847557,
+    "latency_ms": 0.5317894999734563,
+    "size_mb": 0.275847,
+    "note": "60-row lookback, 6 epochs, trained in 59s"
+  },
+  "Transformer": {
+    "accuracy": 0.9510666666666666,
+    "macro_f1": 0.9184022486464323,
+    "latency_ms": 0.41925349995608485,
+    "size_mb": 0.30953,
+    "note": "60-row lookback, 6 epochs, trained in 190s"
+  },
+  "Rule-based BMS": {
+    "accuracy": 0.22093333333333334,
+    "macro_f1": 0.22389143499537814,
+    "latency_ms": 0.005172500010530712,
+    "size_mb": 0.0,
+    "note": "project's own NMC thresholds; no Weak Cell rule exists",
+    "per_class_recall": {
+      "Normal": 0.15193333333333334,
+      "Cell Imbalance": 0.7386666666666667,
+      "Weak Cell": 0.0,
+      "Overvoltage": 0.336,
+      "Undervoltage": 0.0003333333333333333,
+      "Overtemperature": 0.37466666666666665
+    }
+  }
+}

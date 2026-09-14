@@ -1,0 +1,17 @@
+{
+  "Rule-based BMS": {
+    "accuracy": 0.22093333333333334,
+    "macro_f1": 0.22389143499537814,
+    "latency_ms": 0.005172500010530712,
+    "size_mb": 0.0,
+    "note": "project's own NMC thresholds; no Weak Cell rule exists",
+    "per_class_recall": {
+      "Normal": 0.15193333333333334,
+      "Cell Imbalance": 0.7386666666666667,
+      "Weak Cell": 0.0,
+      "Overvoltage": 0.336,
+      "Undervoltage": 0.0003333333333333333,
+      "Overtemperature": 0.37466666666666665
+    }
+  }
+}

@@ -209,269 +209,326 @@ def table(slide, x, y, w, headers, rows, col_w, head_h=0.46, row_h=0.52,
     return ry
 
 
-# ============================================================ the eight slides
+
+
+BENCH_ROWS = [
+    ["XGBoost", ("94.19%", ACCENT, True), ("0.905", MUTED, False), ("0.462 ms", ACCENT, True), ("1.40 MB", MUTED, False), ("Yes", ACCENT, False), ("Deployed — 1 row, no buffer", ACCENT, True)],
+    ["Transformer", ("95.11%", INK, False), ("0.918", MUTED, False), ("0.419 ms", MUTED, False), ("0.31 MB", MUTED, False), ("Warn", WARNING, False), ("Best accuracy; 60-row warm-up", WARNING, False)],
+    ["LSTM", ("87.03%", INK, False), ("0.776", MUTED, False), ("0.532 ms", MUTED, False), ("0.28 MB", MUTED, False), ("Warn", WARNING, False), ("Sequential, weakest F1", MUTED, False)],
+    ["Random Forest", ("89.37%", INK, False), ("0.824", MUTED, False), ("33.770 ms", MUTED, False), ("176.41 MB", MUTED, False), ("No", CRITICAL, False), ("176 MB, 73× the latency", CRITICAL, False)],
+    ["SVM (RBF)", ("88.53%", INK, False), ("0.807", MUTED, False), ("0.568 ms", MUTED, False), ("2.82 MB", MUTED, False), ("Yes", ACCENT, False), ("Would not scale past 20k rows", MUTED, False)],
+    ["Rule-based BMS", ("22.09%", INK, False), ("0.224", MUTED, False), ("5 µs", MUTED, False), ("~0 MB", MUTED, False), ("Yes", ACCENT, False), ("0% recall on Weak Cell", CRITICAL, False)],
+]
+
+BENCH_FOOT = (
+    "All six trained and scored here on the identical 30,000-row held-out split with the same 51 features; "
+    "latency is the median single-row prediction on a 4-core CPU, not a Pi 5. "
+    "Sequence models additionally see a 60-row lookback. SVM trained on a stratified 20k subsample — "
+    "full-data RBF did not converge in usable time, which is part of the verdict."
+)
+
+BENCH_NOTES = """
+We did not argue about which model to use — we trained all six on the identical
+split and measured them. The Transformer is actually the most accurate at 95.11
+percent, a point ahead of XGBoost. We still shipped XGBoost, and here is the
+honest reason: the Transformer needs a sixty-row lookback, which at one hertz
+means a full minute of buffered data before it can say anything, plus a torch
+runtime on the Pi and no feature attribution an engineer can interrogate.
+XGBoost predicts from a single row, instantly, and tells you which features
+drove it. Random Forest is 176 megabytes and seventy-three times slower for
+worse accuracy. And look at the bottom row: a conventional rule-based BMS scores
+twenty-two percent — because cell one's chronic gap puts eighty-four percent of
+healthy rows over the imbalance threshold, so it false-alarms constantly and
+still never detects a weak cell.
+"""
+
+
+# ===================================================================
+#  AI_PBMS_8Slide.pptx — the full 20-slide story condensed into eight.
+#  Every slide carries what was previously two or three slides, so the
+#  layouts run denser: a left content column, a stat or parameter strip,
+#  and a stacked pair of visuals on the right.
+# ===================================================================
+
+def two_col_bullets(slide, x, y, w, h, items, size=14.5, gap=7):
+    """Two-column bullet block, for the slides that carry six-plus points."""
+    half = (w - 0.30) / 2
+    n = (len(items) + 1) // 2
+    bullets(slide, x, y, half, h, items[:n], size=size, gap=gap)
+    bullets(slide, x + half + 0.30, y, half, h, items[n:], size=size, gap=gap)
+
+
+def mini_head(slide, x, y, w, label, color=None):
+    text(slide, x, y, w, 0.24, label, size=9.5, color=color or ACCENT, bold=True)
+
+
 def build():
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(SW), Inches(SH)
-
     G = lambda n: os.path.join(GEN, n)
     E = lambda n: os.path.join(EXT, n)
 
-    # ---------------------------------------------------------------- 1
+    # =============================================================== 1
     s = new_slide(prs, 1, "We could not buy this dataset, so we built it",
-                  eyebrow="AI-PBMS — AI-Powered Predictive Battery Management System  ·  Team ANS_4X")
-    bullets(s, M, BODY_Y + 0.30, LEFT_W, 3.30, [
+                  eyebrow="AI-PBMS — AI-Powered Predictive Battery Management System  ·  "
+                          "Team ANS_4X  ·  PSG iTech")
+    bullets(s, M, BODY_Y + 0.26, LEFT_W, 2.35, [
         "Public BMS datasets hide per-cell voltages behind pack totals.",
         "Imbalance and weak-cell faults are invisible at pack level.",
         "So we instrumented a physical 8S2P NMC pack end to end.",
-        "Programmable DC supply charges; electronic load drives discharge profiles.",
-        "Every row the model ever sees came from this rig.",
-    ], size=16.5)
-    stat_strip(s, M, 5.34, LEFT_W, [
-        ("~50", "charge–discharge cycles", ACCENT),
-        ("~3 hrs", "per cycle", ACCENT),
-        (">100 hrs", "supervised logging", ACCENT),
-        ("~155,000", "rows logged", CRITICAL),
+        "Programmable supply charges; electronic load drives discharge.",
+    ], size=15)
+    stat_strip(s, M, 4.28, LEFT_W, [
+        ("~50", "cycles", ACCENT), ("~3 hrs", "each", ACCENT),
+        (">100 hrs", "logged", ACCENT), ("~155,000", "rows", CRITICAL),
     ])
-    picture(s, E("p03_img1_x38.jpeg"), VIS_X, BODY_Y + 0.18, VIS_W, 4.30, card=True)
-    caption(s, VIS_X, BODY_Y + 4.58, VIS_W,
-            "8S2P pack, JBD BMS and programmable electronic load on the bench")
+    rect(s, M, 5.34, LEFT_W, 1.30, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, M + 0.22, 5.46, LEFT_W - 0.44, "WHAT THE DATA SHOWED", CRITICAL)
+    text(s, M + 0.22, 5.74, LEFT_W - 0.44, 0.80,
+         "Cell 1 runs 289 mV below its neighbours in every cycle. A pack-level "
+         "voltmeter reads 30.5 V and calls this healthy.",
+         size=12, color=INK, line=1.26)
+    picture(s, E("p03_img1_x38.jpeg"), VIS_X, BODY_Y + 0.14, VIS_W, 1.78, card=True)
+    picture(s, G("fig_cell_traces.png"), VIS_X, BODY_Y + 2.06, VIS_W, 3.10)
     notes(s, """
-Every public battery dataset reports pack-level voltage and current. That is
+Every public battery dataset reports pack-level voltage and current, which is
 useless to us: imbalance and weak-cell faults only show in the spread between
-individual cells. So we built the dataset. An 8S2P NMC pack, a JBD BMS on all eight
-taps, a programmable supply charging and an electronic load discharging. Around fifty
-cycles, three hours each, over a hundred hours logged, roughly 155,000 rows. Every
-number in this deck came off that bench.""")
+individual cells. So we built the dataset — an 8S2P NMC pack, a JBD BMS on all
+eight taps, roughly fifty cycles and 155,000 rows. The chart bottom right is
+what a hundred hours bought us: seven cells tracking together, and cell one
+sitting 289 millivolts below them for the entire discharge. That one defect
+shaped everything that follows.""")
 
-    # ---------------------------------------------------------------- 2
-    s = new_slide(prs, 2, "Pack topology and the model behind it")
-    bullets(s, M, BODY_Y + 0.04, LEFT_W, 2.62, [
-        "8S sets the 33.6 V nominal bus the drivetrain expects.",
-        "2P buys 8 Ah capacity and the current headroom.",
-        "Eight per-cell taps make imbalance observable rather than inferred.",
-        "1RC caught the instant drop but missed slow recovery.",
-    ], size=16.5)
-    text(s, M, 4.44, LEFT_W, 0.28, "2RC PARAMETERS — FITTED ON THE 0–4000 s HPPC SEGMENT",
-         size=10, color=MUTED, bold=True)
-    stat_strip(s, M, 4.78, LEFT_W, [
+    # =============================================================== 2
+    s = new_slide(prs, 2, "The pack, and the model of the pack")
+    two_col_bullets(s, M, BODY_Y + 0.10, LEFT_W, 2.20, [
+        "8S sets the 33.6 V nominal bus voltage.",
+        "2P buys 8 Ah and current headroom.",
+        "Sixteen LG INR21700-M50 cells.",
+        "Eight taps make imbalance observable.",
+        "Four NTCs give thermal resolution.",
+        "1RC missed the slow relaxation.",
+    ], size=13.5)
+    mini_head(s, M, 4.02, LEFT_W, "2RC PARAMETERS — FITTED ON THE 0–4000 s HPPC SEGMENT", MUTED)
+    stat_strip(s, M, 4.32, LEFT_W, [
         ("R₀ 0.06142 Ω", "ohmic drop", ACCENT),
         ("R₁ 0.00820 Ω", "fast branch", ACCENT),
         ("C₁ 22.268 F", "τ₁ ≈ 0.18 s", MUTED),
     ])
-    stat_strip(s, M, 5.76, LEFT_W, [
+    stat_strip(s, M, 5.30, LEFT_W, [
         ("R₂ 0.00882 Ω", "slow branch", ACCENT),
         ("C₂ 119.37 F", "τ₂ ≈ 1.05 s", MUTED),
-        ("2RC", "Vt = OCV − IR₀ − V₁ − V₂", INK),
+        ("13.4 mV", "per 1% SOC", INK),
     ])
-    picture(s, G("diag_pack_8s2p.png"), VIS_X, BODY_Y - 0.02, VIS_W, 2.42)
-    picture(s, G("diag_2rc_ecm.png"),  VIS_X, BODY_Y + 2.46, VIS_W, 2.50)
+    text(s, M, 6.38, LEFT_W, 0.30,
+         "Vt = OCV(SOC) − I·R₀ − V_RC1 − V_RC2",
+         size=12, color=ACCENT, bold=True)
+    picture(s, G("diag_pack_8s2p.png"), VIS_X, BODY_Y + 0.02, VIS_W, 2.12)
+    picture(s, G("diag_2rc_ecm.png"), VIS_X, BODY_Y + 2.42, VIS_W, 2.55)
     notes(s, """
-Eight in series gives the 33.6-volt bus the drivetrain wants. Two in parallel
-gives 8 amp-hours and the current headroom to run realistic profiles. Eight series
-groups means eight sense taps, so imbalance is measured, not inferred. On modelling,
-one RC branch caught the instant ohmic drop but missed the slow recovery after a load
-step. A second branch fixed it — fast at about 0.18 seconds, slow at about 1.05.
-These five parameters were fitted on a clean HPPC segment.""")
+Eight in series gives the 33.6-volt bus the drivetrain wants; two in parallel
+gives eight amp-hours and the current headroom for realistic profiles. Eight
+series groups means eight sense taps, so imbalance is measured rather than
+inferred. On modelling, one RC branch caught the instant ohmic drop but missed
+the slow recovery after a load step, so we went to two — fast at 0.18 seconds,
+slow at 1.05. All five parameters were fitted on a clean HPPC segment, and the
+same estimation gave us the OCV curve: 13.4 millivolts per percent of charge.""")
 
-    # ---------------------------------------------------------------- 3
-    s = new_slide(prs, 3, "From BLE frames to labelled rows")
-    bullets(s, M, BODY_Y + 0.10, LEFT_W, 3.05, [
-        "JBD BMS → BLE via bleak → jbd_logger v9 on the Pi.",
-        "BLE fragmented long responses; frames reassembled before any parsing.",
-        "NTC byte-offset fix realigned all four thermistor channels.",
-        "cell_v1 sat ~0.25 V below pack median in every cycle.",
-        "That one weak cell labelled 70.2% of rows Cell Imbalance.",
-    ], size=16.5)
-    rect(s, M, 5.02, LEFT_W, 1.62, fill=PANEL, line=HAIRLINE, lw=0.75)
-    text(s, M + 0.22, 5.18, LEFT_W - 0.44, 0.26, "HANDLING THE SKEW",
-         size=10, color=WARNING, bold=True)
-    text(s, M + 0.22, 5.48, LEFT_W - 0.44, 1.06,
-         "Physics-informed synthetic faults generated against datasheet limits, then "
-         "down-sampled to an equal count per class — a 50/50 real-to-synthetic split "
-         "that removes the normalcy bias without discarding real rows.",
-         size=12.5, color=INK, line=1.24)
-    picture(s, G("fig_class_distribution.png"), VIS_X, BODY_Y + 0.28, VIS_W, 4.55)
+    # =============================================================== 3
+    s = new_slide(prs, 3, "From BLE frames to a balanced training set")
+    two_col_bullets(s, M, BODY_Y + 0.10, LEFT_W, 2.35, [
+        "JBD BMS → BLE (bleak) → jbd_logger v9.",
+        "Fragmented BLE frames reassembled first.",
+        "NTC byte-offset fix realigned four channels.",
+        "17 raw channels become 51 features.",
+        "Rolling stats, derivatives, per-cell rates.",
+        "cell_v1 skew labelled 70.2% Cell Imbalance.",
+    ], size=13.5)
+    rect(s, M, 4.14, LEFT_W, 1.22, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, M + 0.22, 4.26, LEFT_W - 0.44, "HANDLING THE SKEW", WARNING)
+    text(s, M + 0.22, 4.54, LEFT_W - 0.44, 0.74,
+         "Physics-informed synthetic faults generated against datasheet limits, "
+         "then balanced to an equal count per class — 50/50 real to synthetic.",
+         size=11.5, color=INK, line=1.24)
+    rect(s, M, 5.48, LEFT_W, 1.16, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, M + 0.22, 5.60, LEFT_W - 0.44, "LEAKAGE CONTROL")
+    text(s, M + 0.22, 5.88, LEFT_W - 0.44, 0.70,
+         "Windows and derivatives computed inside each (split, label) group, so "
+         "none straddles a train/test boundary. 208,010 rows, 70/15/15.",
+         size=11.5, color=INK, line=1.24)
+    picture(s, G("fig_feature_importance.png"), VIS_X, BODY_Y + 0.02, VIS_W, 2.75)
+    picture(s, G("fig_dataset_composition.png"), VIS_X, BODY_Y + 2.88, VIS_W, 2.30)
     notes(s, """
-The pipeline is short on purpose: BMS, BLE through bleak, jbd_logger v9. Two
-things bit us. BLE fragments long responses across frames, so early logs were
-silently truncated — we now reassemble before parsing. And the four thermistors were
-read at the wrong byte offset, scrambling the thermal channels. The bigger finding
-was in the data: cell one sat a quarter-volt below median every cycle, which labelled
-over seventy percent of rows Cell Imbalance. We balanced with physics-informed
-synthetic faults rather than throwing real rows away.""")
+The pipeline is short on purpose. Two things bit us: BLE fragments long
+responses across frames, so early logs were silently truncated, and the four
+thermistors were read at the wrong byte offset. From seventeen raw channels we
+derive fifty-one features — rolling statistics, first derivatives, per-cell rise
+and drop rates, driving-mode flags. The chart top right is read out of the
+trained model, not our opinion. Because cell one is chronically low, a
+rule-based labeller marked seventy percent of rows as imbalance, so we balanced
+with physics-informed synthetic faults rather than discarding real data.""")
 
-    # ---------------------------------------------------------------- 4
-    s = new_slide(prs, 4, "Why XGBoost, and not the obvious alternatives")
-    headers = ["Model", "Accuracy", "Latency", "Size", "Edge", "Interpretable", "Verdict"]
-    rows = [
-        ["XGBoost", ("98.55%", ACCENT, True), ("0.85 ms", ACCENT, True), "~1.4 MB",
-         ("Yes", ACCENT, True), ("Yes", ACCENT, True), ("Deployed", ACCENT, True)],
-        ["Transformer", ("—", MUTED, False), ("—", MUTED, False), "~1.6 MB",
-         ("Marginal", WARNING, False), ("No", CRITICAL, False), "Needs sequence buffer"],
-        ["LSTM", ("—", MUTED, False), ("—", MUTED, False), ("—", MUTED, False),
-         ("Marginal", WARNING, False), ("No", CRITICAL, False), "Sequential, hard to batch"],
-        ["Random Forest", ("—", MUTED, False), ("—", MUTED, False), ("—", MUTED, False),
-         ("Yes", ACCENT, False), ("Yes", ACCENT, False), "Larger for same accuracy"],
-        ["SVM", ("—", MUTED, False), ("—", MUTED, False), ("—", MUTED, False),
-         ("Yes", ACCENT, False), ("Partly", WARNING, False), "Poor on 50-feature tabular"],
-        ["Rule-based BMS", ("—", MUTED, False), ("—", MUTED, False), "trivial",
-         ("Yes", ACCENT, False), ("Yes", ACCENT, False), ("Reacts, never predicts", CRITICAL, False)],
-    ]
-    end_y = table(s, M, BODY_Y + 0.06, SW - 2*M, headers, rows,
-                  col_w=[1.55, 1.00, 1.00, 0.85, 0.85, 1.20, 2.25],
-                  head_h=0.44, row_h=0.50, fs=11.5, hfs=10.5)
-    text(s, M, end_y + 0.30, 6.10, 0.34,
-         "WHAT DECIDED IT", size=10, color=ACCENT, bold=True)
-    text(s, M, end_y + 0.62, 6.10, 0.90,
-         "Fifty engineered tabular features, a hard latency budget on the Pi and a "
-         "reviewer who has to be able to ask why — gradient-boosted trees win all "
-         "three. “—” means not measured here: we instrumented the model we shipped.",
-         size=11.5, color=MUTED, line=1.28)
-    picture(s, G("fig_model_performance.png"), M + 6.45, end_y + 0.16,
-            SW - M - (M + 6.45), 1.52)
+    # =============================================================== 4
+    s = new_slide(prs, 4, "We benchmarked all six on the same split")
+    headers = ["Model", "Accuracy", "Macro F1", "Latency", "Size", "Edge", "Verdict"]
+    rows = BENCH_ROWS
+    end_y = table(s, M, BODY_Y + 0.02, SW - 2*M, headers, rows,
+                  col_w=[1.60, 1.05, 1.00, 1.00, 0.95, 0.80, 2.30],
+                  head_h=0.42, row_h=0.44, fs=11, hfs=10)
+    picture(s, G("fig_model_benchmark.png"), M + 0.30, end_y + 0.14,
+            SW - 2*M - 0.60, 1.56)
+    text(s, M, end_y + 1.80, SW - 2*M, 0.42, BENCH_FOOT, size=8.2,
+         color=MUTED, line=1.24)
+    notes(s, BENCH_NOTES)
+
+    # =============================================================== 5
+    s = new_slide(prs, 5, "Six classes, honest confidence, one gate")
+    two_col_bullets(s, M, BODY_Y + 0.08, LEFT_W, 2.05, [
+        "Normal, Overvoltage, Overtemp clear 97% F1.",
+        "Cell Imbalance recall 65% — the weak spot.",
+        "Misses land on Undervoltage, physically adjacent.",
+        "Below 0.50 the model abstains outright.",
+        "0.50–0.85 warns; above 0.85 alerts.",
+        "An IsolationForest gate runs before the classifier.",
+    ], size=13.5)
+    stat_strip(s, M, 3.90, LEFT_W, [
+        ("0.913", "OOD AUROC", ACCENT),
+        ("100%", "OOD precision", ACCENT),
+        ("0.0%", "false positives", ACCENT),
+        ("24.5%", "OOD recall", CRITICAL),
+    ])
+    rect(s, M, 4.96, LEFT_W, 1.66, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, M + 0.22, 5.08, LEFT_W - 0.44, "WE ARE NOT HIDING THIS", CRITICAL)
+    text(s, M + 0.22, 5.36, LEFT_W - 0.44, 1.18,
+         "28.7% of true Cell Imbalance samples are predicted Undervoltage — one "
+         "cell drops, pack voltage follows. Separating them needs more real "
+         "imbalance events, not more synthetic ones. A confident wrong answer is "
+         "worse than an honest abstention.",
+         size=11.5, color=INK, line=1.24)
+    picture(s, G("fig_per_class_metrics.png"), VIS_X, BODY_Y + 0.02, VIS_W, 2.10)
+    picture(s, G("fig_confusion_matrix.png"), VIS_X + 1.45, BODY_Y + 2.18, VIS_W - 2.90, 1.55)
+    picture(s, G("diag_confidence_ladder.png"), VIS_X, BODY_Y + 3.82, VIS_W, 1.45)
     notes(s, """
-Tabular sensor data with fifty engineered features is what gradient-boosted
-trees are good at, and each alternative fails a constraint we actually have. The
-Transformer and the LSTM need a sequence buffer — latency and memory we do not have
-— and neither gives an attribution an engineer can argue with. Random Forest needs a
-much bigger model for the same accuracy. A rule-based BMS only reacts after a
-threshold is already breached. XGBoost: 98.55 percent, 0.85 milliseconds on the Pi 5,
-and inspectable.""")
+Normal, Overvoltage and Overtemperature all clear ninety-seven percent F1. Cell
+Imbalance recall is sixty-five, and that is the weakest number here — its misses
+go to Undervoltage, which is physically sensible: one cell drops and pack
+voltage follows. Around the classifier we wrap two things. A confidence band:
+below zero-point-five we abstain, up to zero-eight-five we warn, above that we
+alert. And in front of it, an IsolationForest gate for failure modes we have
+never seen — AUROC nine-one-three, a hundred percent precision, zero false
+positives, catching one unknown in four. Tuned that way deliberately.""")
 
-    # ---------------------------------------------------------------- 5
-    s = new_slide(prs, 5, "Three tiers, no single point of failure")
-    bullets(s, M, BODY_Y + 0.10, LEFT_W, 3.10, [
-        "Tier 1 — JBD BMS senses eight cell taps and four NTCs.",
-        "Tier 2 — Pi 5 runs logger, XGBoost inference and dashboard.",
-        "Tier 3 — Arduino Uno R4 watches the Pi's heartbeat.",
-        "Missed heartbeat pulls the RUN pin and resets the Pi.",
-        "Inference stays at the edge: no link, no safety gap.",
-    ], size=16.5)
-    rect(s, M, 5.16, LEFT_W, 1.30, fill=PANEL, line=HAIRLINE, lw=0.75)
-    text(s, M + 0.22, 5.30, LEFT_W - 0.44, 0.26, "ACCELERATION PATH",
-         size=10, color=ACCENT, bold=True)
-    text(s, M + 0.22, 5.60, LEFT_W - 0.44, 0.76,
+    # =============================================================== 6
+    s = new_slide(prs, 6, "Three tiers at the edge, three surfaces in the browser")
+    two_col_bullets(s, M, BODY_Y + 0.08, LEFT_W, 2.10, [
+        "JBD BMS senses eight taps and four NTCs.",
+        "Pi 5 runs logger, inference and dashboard.",
+        "Arduino R4 watches the Pi's heartbeat.",
+        "Missed beat pulls RUN pin, resets the Pi.",
+        "Inference stays local: no link, no safety gap.",
+        "Cloudflare tunnel opens no inbound port.",
+    ], size=13.5)
+    rect(s, M, 3.94, LEFT_W, 1.18, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, M + 0.22, 4.06, LEFT_W - 0.44, "ACCELERATION PATH")
+    text(s, M + 0.22, 4.34, LEFT_W - 0.44, 0.70,
          "Zynq-7000 SoC moves the same tree traversal into programmable logic, "
          "freeing the CPU for the dashboard and the BLE link.",
-         size=13, color=INK, line=1.22)
-    picture(s, G("diag_hardware.png"), VIS_X, BODY_Y + 0.02, VIS_W, 3.05)
-    hy = BODY_Y + 3.20
-    picture(s, E("p06_img1_x51.jpeg"), VIS_X, hy, VIS_W/2 - 0.10, 1.55, card=True)
-    picture(s, E("p06_img2_x52.jpeg"), VIS_X + VIS_W/2 + 0.10, hy, VIS_W/2 - 0.10, 1.55, card=True)
-    caption(s, VIS_X, hy + 1.58, VIS_W/2 - 0.10, "Raspberry Pi 5")
-    caption(s, VIS_X + VIS_W/2 + 0.10, hy + 1.58, VIS_W/2 - 0.10, "Arduino Uno R4 WiFi")
+         size=11.5, color=INK, line=1.24)
+    hy = 5.26
+    picture(s, E("p06_img1_x51.jpeg"), M, hy, LEFT_W/2 - 0.12, 1.10, card=True)
+    picture(s, E("p06_img2_x52.jpeg"), M + LEFT_W/2 + 0.12, hy, LEFT_W/2 - 0.12, 1.10, card=True)
+    caption(s, M, hy + 1.13, LEFT_W/2 - 0.12, "Raspberry Pi 5")
+    caption(s, M + LEFT_W/2 + 0.12, hy + 1.13, LEFT_W/2 - 0.12, "Arduino Uno R4 WiFi")
+    picture(s, G("diag_hardware.png"), VIS_X, BODY_Y + 0.06, VIS_W, 2.45)
+    picture(s, G("diag_system_flow.png"), VIS_X, BODY_Y + 2.62, VIS_W, 2.55)
     notes(s, """
-Three tiers, each doing what the others cannot. The JBD BMS senses: eight taps,
-four thermistors, pack voltage and current. The Pi 5 runs the logger, the inference
-and the dashboard. Inference sits at the edge deliberately — push it to a server and
-every network hiccup becomes an unmonitored window. The third tier exists because
-general-purpose computers hang. An Arduino on its own rail watches for a heartbeat
-and pulls the Pi's RUN pin if it stops. Zynq-7000 is our path to take inference off
-the CPU entirely.""")
+Three tiers, each doing what the others cannot. The BMS senses, the Pi 5 runs
+the logger and the inference and the dashboard, and an Arduino on its own power
+rail watches for a heartbeat — if it stops, it pulls the Pi's RUN pin and forces
+a reset. Inference sits at the edge deliberately: push it to a server and every
+network hiccup becomes an unmonitored window. The lower diagram is the whole
+data path — edge, service, interface — with everything published through a
+Cloudflare tunnel so we never open an inbound port on the Pi.""")
 
-    # ---------------------------------------------------------------- 6
-    s = new_slide(prs, 6, "The dashboard an operator actually reads")
-    bullets(s, M, BODY_Y + 0.10, LEFT_W, 3.10, [
-        "Flask on the Pi, exposed over a Cloudflare tunnel.",
-        "Live per-cell voltages, pack current and four temperature zones.",
-        "Charge and discharge ETA smoothed with an EMA filter.",
-        "Driving context from current magnitude at T versus T-1.",
-        "Alert history logs value, threshold, severity and resolution time.",
-    ], size=16.5)
-    text(s, M, 5.18, LEFT_W, 0.28, "FOUR-MODE DRIVING CONTEXT", size=10,
-         color=ACCENT, bold=True)
+    # =============================================================== 7
+    s = new_slide(prs, 7, "The platform an operator actually uses")
+    two_col_bullets(s, M, BODY_Y + 0.08, LEFT_W, 2.10, [
+        "Flask on the Pi, live per-cell voltages.",
+        "Pack current and four temperature zones.",
+        "Charge/discharge ETA smoothed by EMA.",
+        "Four driving modes from |I(T)| vs |I(T-1)|.",
+        "39 cycles compared against their own history.",
+        "Alert log: value, threshold, severity, resolution.",
+    ], size=13.5)
     modes = [("IDLE", MUTED), ("ACCEL", CRITICAL), ("CRUISE", ACCENT), ("DECEL", WARNING)]
-    mw = (LEFT_W - 3 * 0.14) / 4
+    mw = (LEFT_W - 3 * 0.12) / 4
     for i, (m, col) in enumerate(modes):
-        mx = M + i * (mw + 0.14)
-        rect(s, mx, 5.52, mw, 0.62, fill=BG, line=col, lw=1.25)
-        text(s, mx, 5.52, mw, 0.62, m, size=14, color=col, bold=True,
+        mx = M + i * (mw + 0.12)
+        rect(s, mx, 3.92, mw, 0.52, fill=BG, line=col, lw=1.2)
+        text(s, mx, 3.92, mw, 0.52, m, size=12, color=col, bold=True,
              align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-    text(s, M, 6.26, LEFT_W, 0.30,
-         "Thresholds follow the mode — a sag under ACCEL is not a sag at IDLE.",
-         size=11.5, color=MUTED)
-    picture(s, E("p07_img1_x61.jpeg"), VIS_X, BODY_Y + 0.20, VIS_W, 2.20, card=True)
-    picture(s, E("p08_img2_x68.png"),  VIS_X, BODY_Y + 2.62, VIS_W, 2.10, card=True)
-    caption(s, VIS_X, BODY_Y + 4.78, VIS_W,
-            "Live sensing tiles (top) and the critical-alarm path (bottom)")
+    rect(s, M, 4.62, LEFT_W, 2.00, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, M + 0.22, 4.74, LEFT_W - 0.44, "CONTEXT IS A FEATURE")
+    text(s, M + 0.22, 5.02, LEFT_W - 0.44, 1.50,
+         "A sag under ACCEL is normal; the same sag at IDLE is a fault, so "
+         "thresholds follow the mode. The three mode flags carry 12.4% of the "
+         "model's total gain and ntc_spread another 5.0% — nearly a fifth of the "
+         "decision comes from context pack-level sensors cannot provide.",
+         size=11.5, color=INK, line=1.24)
+    picture(s, G("mock_landing.png"), VIS_X, BODY_Y + 0.04, VIS_W, 1.95, card=True)
+    picture(s, E("p07_img1_x61.jpeg"), VIS_X, BODY_Y + 2.08, VIS_W, 1.50, card=True)
+    picture(s, G("fig_cycle_history.png"), VIS_X, BODY_Y + 3.68, VIS_W, 1.55)
     notes(s, """
-Flask on the Pi, published through a Cloudflare tunnel so a reviewer can open it
-without us opening a port. It is operator-facing, not engineer-facing: live per-cell
-voltages, pack current with direction, four thermal zones, and a charge or discharge
-ETA smoothed with an EMA so it does not jitter. The piece worth noting is driving
-context. Four modes from the change in current magnitude between samples — because a
-voltage sag under hard acceleration is normal, and the same sag at idle is a fault.
-Thresholds follow the mode.""")
+The platform is Flask on the Pi behind a Cloudflare tunnel. It is
+operator-facing: live per-cell voltages, pack current with direction, four
+thermal zones, and an ETA smoothed with an EMA so it does not jitter. The piece
+worth calling out is driving context — four modes derived from the change in
+current magnitude, because a voltage sag under hard acceleration is normal and
+the same sag at idle is a fault. And the cycle engine compares each live cycle
+against the average of all thirty-nine before it, so degradation shows up before
+any absolute threshold is breached.""")
 
-    # ---------------------------------------------------------------- 7
-    s = new_slide(prs, 7, "Six classes, and the confidence to say “I don't know”")
-    text(s, M, BODY_Y + 0.06, LEFT_W, 0.28, "THE SIX FAULT CLASSES", size=10,
-         color=ACCENT, bold=True)
-    classes = ["Normal", "Cell Imbalance", "Weak Cell",
-               "Overvoltage", "Undervoltage", "Overtemperature"]
-    cw = (LEFT_W - 0.16) / 2
-    for i, cname in enumerate(classes):
-        cx = M + (i % 2) * (cw + 0.16)
-        cy = BODY_Y + 0.40 + (i // 2) * 0.56
-        rect(s, cx, cy, cw, 0.46, fill=PANEL, line=HAIRLINE, lw=0.75)
-        d = rect(s, cx + 0.16, cy + 0.175, 0.11, 0.11,
-                 fill=ACCENT if i == 0 else CRITICAL, shape=MSO_SHAPE.OVAL)
-        d.line.fill.background()
-        text(s, cx + 0.40, cy, cw - 0.50, 0.46, cname, size=13.5, color=INK,
-             anchor=MSO_ANCHOR.MIDDLE)
-    bullets(s, M, 3.68, LEFT_W, 2.30, [
-        "Below 0.50 the model abstains — no alert is raised.",
-        "0.50–0.85 raises a logged warning, non-blocking for the operator.",
-        "Above 0.85 becomes an alert with a corrective action.",
-        "A confident wrong answer is worse than an honest abstention.",
-    ], size=16)
-    picture(s, G("fig_confidence_bands.png"), VIS_X, BODY_Y + 0.16, VIS_W, 1.55)
-    picture(s, G("fig_confusion_matrix.png"), VIS_X + 0.30, BODY_Y + 1.92, VIS_W - 0.60, 3.30)
-    notes(s, """
-Six classes. The part I care more about is the confidence framework around them.
-The classifier returns a probability and we split it three ways. Below 0.50 we
-abstain outright — nothing is raised and the sample goes for review. Between 0.50 and
-0.85 we log a warning that does not block the operator. Only above 0.85 do we raise
-an alert with a corrective action. In a safety-critical system a confidently wrong
-prediction is worse than none: an abstention sends someone to look, a false alert
-teaches them to ignore the dashboard.""")
-
-    # ---------------------------------------------------------------- 8
+    # =============================================================== 8
     s = new_slide(prs, 8, "Swap the chemistry, not the codebase")
-    bullets(s, M, BODY_Y + 0.06, LEFT_W, 3.32, [
-        "Upload a datasheet PDF; the parser reads the limits.",
-        "Extracts V_nom, V_max, V_min, capacity, current, thermal.",
+    two_col_bullets(s, M, BODY_Y + 0.08, LEFT_W, 2.05, [
+        "Upload a datasheet PDF; the parser reads limits.",
+        "V_nom, V_max, V_min, capacity, current, thermal.",
         "Pack sizing derives S and P from the bus target.",
-        "Tiering: NMC reuse, NCA/LCO shift, LFP remap, LTO rescale.",
-        "Overvoltage warns 95%, critical 100%; overcurrent 90%.",
-        "active_profile.json and PostgreSQL sync live, no restart.",
-    ], size=15.5, gap=8)
-    rect(s, M, 5.34, LEFT_W, 1.16, fill=PANEL, line=HAIRLINE, lw=0.75)
-    text(s, M + 0.22, 5.46, LEFT_W - 0.44, 0.26, "IN-BROWSER RETRAINING",
-         size=10, color=WARNING, bold=True)
-    text(s, M + 0.22, 5.74, LEFT_W - 0.44, 0.66,
+        "NMC reuse → NCA/LCO shift → LFP remap → LTO rescale.",
+        "Overvoltage warns 95%, critical 100%.",
+        "active_profile.json + PostgreSQL sync, no restart.",
+    ], size=13.5)
+    rect(s, M, 3.88, LEFT_W, 1.06, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, M + 0.22, 3.99, LEFT_W - 0.44, "IN-BROWSER RETRAINING", WARNING)
+    text(s, M + 0.22, 4.26, LEFT_W - 0.44, 0.62,
          "Upload field telemetry from the new pack and retrain XGBoost from the "
          "dashboard — the adaptation loop closes without a developer.",
-         size=13, color=INK, line=1.22)
-    lw_, rw_ = 2.42, VIS_W - 2.42 - 0.20
-    picture(s, G("diag_configurator.png"), VIS_X, BODY_Y + 0.06, lw_, 4.46)
-    picture(s, G("fig_ocv_soc.png"), VIS_X + lw_ + 0.20, BODY_Y + 0.22, rw_, 3.92)
-    caption(s, VIS_X + lw_ + 0.20, BODY_Y + 4.24, rw_,
-            "Why LFP needs a remap, not a constant offset")
+         size=11.5, color=INK, line=1.24)
+    mini_head(s, M, 5.08, LEFT_W, "WHAT WE WOULD BUILD NEXT", MUTED)
+    nxt = [("Close the Cell Imbalance gap", CRITICAL),
+           ("Lift OOD recall above 24.5%", WARNING),
+           ("Move inference onto the Zynq-7000", ACCENT),
+           ("Characterise LFP on a real bench", ACCENT),
+           ("SOH and remaining useful life from dV/dt", ACCENT)]
+    ny = 5.38
+    for t, col in nxt:
+        b = rect(s, M, ny, 0.06, 0.22, fill=col); b.line.fill.background()
+        text(s, M + 0.22, ny - 0.02, LEFT_W - 0.22, 0.26, t, size=11.5, color=INK)
+        ny += 0.27
+    picture(s, G("diag_configurator.png"), VIS_X, BODY_Y + 0.04, 2.34, 4.34)
+    picture(s, G("fig_ocv_soc.png"), VIS_X + 2.52, BODY_Y + 0.42, VIS_W - 2.52, 3.15)
+    caption(s, VIS_X + 2.52, BODY_Y + 3.66, VIS_W - 2.52,
+            "Why LFP needs a remap, not an offset")
     notes(s, """
-This is what makes it reusable. Upload the datasheet for whatever cell you are
-running; the parser pulls chemistry, voltages, capacity, current and thermal limits,
-and derives series and parallel counts. Then it tiers the chemistry: NMC is direct
-reuse, NCA and LCO share the 4.2-volt ceiling so they only shift, LFP needs a real
-remap to 2.50–3.65 volts, and LTO at 2.4 nominal needs everything rescaled. The chart
-shows why — our measured NMC curve moves about 13 millivolts per percent SOC, so
-voltage tracks charge. On LFP's plateau it does not, and no offset fixes that.""")
+The last piece is what makes this reusable. Upload the manufacturer datasheet,
+the parser pulls chemistry and every limit, pack sizing derives the series and
+parallel counts, and the chemistry gets tiered: NMC is direct reuse, NCA and LCO
+share the ceiling so they only shift, LFP needs a genuine remap to 2.50 to 3.65
+volts because of that flat OCV curve, and LTO needs everything rescaled. And you
+can retrain on your own field telemetry from the browser. What is not finished:
+imbalance recall, OOD recall, the Zynq path, a real LFP bench, and state of
+health. Thank you — happy to take questions.""")
 
     prs.save(OUT)
-    print("wrote", os.path.relpath(OUT, ROOT))
+    print("wrote", os.path.relpath(OUT, ROOT), "| 8 slides")
     return OUT
-
-
-if __name__ == "__main__":
-    build()

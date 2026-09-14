@@ -214,6 +214,38 @@ def table(slide, x, y, w, headers, rows, col_w, head_h=0.46, row_h=0.52,
 
 
 
+BENCH_ROWS = [
+    ["XGBoost", ("94.19%", ACCENT, True), ("0.905", MUTED, False), ("0.462 ms", ACCENT, True), ("1.40 MB", MUTED, False), ("Yes", ACCENT, False), ("Deployed — 1 row, no buffer", ACCENT, True)],
+    ["Transformer", ("95.11%", INK, False), ("0.918", MUTED, False), ("0.419 ms", MUTED, False), ("0.31 MB", MUTED, False), ("Warn", WARNING, False), ("Best accuracy; 60-row warm-up", WARNING, False)],
+    ["LSTM", ("87.03%", INK, False), ("0.776", MUTED, False), ("0.532 ms", MUTED, False), ("0.28 MB", MUTED, False), ("Warn", WARNING, False), ("Sequential, weakest F1", MUTED, False)],
+    ["Random Forest", ("89.37%", INK, False), ("0.824", MUTED, False), ("33.770 ms", MUTED, False), ("176.41 MB", MUTED, False), ("No", CRITICAL, False), ("176 MB, 73× the latency", CRITICAL, False)],
+    ["SVM (RBF)", ("88.53%", INK, False), ("0.807", MUTED, False), ("0.568 ms", MUTED, False), ("2.82 MB", MUTED, False), ("Yes", ACCENT, False), ("Would not scale past 20k rows", MUTED, False)],
+    ["Rule-based BMS", ("22.09%", INK, False), ("0.224", MUTED, False), ("5 µs", MUTED, False), ("~0 MB", MUTED, False), ("Yes", ACCENT, False), ("0% recall on Weak Cell", CRITICAL, False)],
+]
+
+BENCH_FOOT = (
+    "All six trained and scored here on the identical 30,000-row held-out split with the same 51 features; "
+    "latency is the median single-row prediction on a 4-core CPU, not a Pi 5. "
+    "Sequence models additionally see a 60-row lookback. SVM trained on a stratified 20k subsample — "
+    "full-data RBF did not converge in usable time, which is part of the verdict."
+)
+
+BENCH_NOTES = """
+We did not argue about which model to use — we trained all six on the identical
+split and measured them. The Transformer is actually the most accurate at 95.11
+percent, a point ahead of XGBoost. We still shipped XGBoost, and here is the
+honest reason: the Transformer needs a sixty-row lookback, which at one hertz
+means a full minute of buffered data before it can say anything, plus a torch
+runtime on the Pi and no feature attribution an engineer can interrogate.
+XGBoost predicts from a single row, instantly, and tells you which features
+drove it. Random Forest is 176 megabytes and seventy-three times slower for
+worse accuracy. And look at the bottom row: a conventional rule-based BMS scores
+twenty-two percent — because cell one's chronic gap puts eighty-four percent of
+healthy rows over the imbalance threshold, so it false-alarms constantly and
+still never detects a weak cell.
+"""
+
+
 # --------------------------------------------------------- extra slide parts
 def title_slide(prs, title, sub, meta):
     sl = prs.slides.add_slide(prs.slide_layouts[6])
@@ -484,42 +516,16 @@ seventy-fifteen-fifteen. The thirty-thousand-row test split is untouched until
 final evaluation, and every number on the next two slides comes from it.""")
 
     # ------------------------------------------------------- 9 why xgboost
-    s = new_slide(prs, 9, "Why XGBoost, and not the obvious alternatives")
-    headers = ["Model", "Accuracy", "Latency", "Size", "Edge", "Interpretable", "Verdict"]
-    rows = [
-        ["XGBoost", ("98.55%", ACCENT, True), ("0.85 ms", ACCENT, True), "~1.4 MB",
-         ("Yes", ACCENT, True), ("Yes", ACCENT, True), ("Deployed", ACCENT, True)],
-        ["Transformer", ("—", MUTED, False), ("—", MUTED, False), "~1.6 MB",
-         ("Marginal", WARNING, False), ("No", CRITICAL, False), "Needs sequence buffer"],
-        ["LSTM", ("—", MUTED, False), ("—", MUTED, False), ("—", MUTED, False),
-         ("Marginal", WARNING, False), ("No", CRITICAL, False), "Sequential, hard to batch"],
-        ["Random Forest", ("—", MUTED, False), ("—", MUTED, False), ("—", MUTED, False),
-         ("Yes", ACCENT, False), ("Yes", ACCENT, False), "Larger for same accuracy"],
-        ["SVM", ("—", MUTED, False), ("—", MUTED, False), ("—", MUTED, False),
-         ("Yes", ACCENT, False), ("Partly", WARNING, False), "Poor on 51-feature tabular"],
-        ["Rule-based BMS", ("—", MUTED, False), ("—", MUTED, False), "trivial",
-         ("Yes", ACCENT, False), ("Yes", ACCENT, False), ("Reacts, never predicts", CRITICAL, False)],
-    ]
-    end_y = table(s, M, BODY_Y + 0.06, SW - 2*M, headers, rows,
-                  col_w=[1.55, 1.00, 1.00, 0.85, 0.85, 1.20, 2.25],
-                  head_h=0.44, row_h=0.50, fs=11.5, hfs=10.5)
-    text(s, M, end_y + 0.30, 6.10, 0.34, "WHAT DECIDED IT", size=10,
-         color=ACCENT, bold=True)
-    text(s, M, end_y + 0.62, 6.10, 0.90,
-         "Fifty-one engineered tabular features, a hard latency budget on the Pi and "
-         "a reviewer who has to be able to ask why — gradient-boosted trees win all "
-         "three. “—” means not measured here: we instrumented the model we shipped.",
-         size=11.5, color=MUTED, line=1.28)
-    picture(s, G("fig_model_performance.png"), M + 6.45, end_y + 0.16,
-            SW - M - (M + 6.45), 1.52)
-    notes(s, """
-Tabular sensor data with fifty-one engineered features is what gradient-boosted
-trees are good at, and each alternative fails a constraint we actually have. The
-Transformer and the LSTM need a sequence buffer — latency and memory we do not
-have — and neither gives an attribution an engineer can argue with. Random
-Forest needs a much bigger model for the same accuracy. A rule-based BMS only
-reacts after a threshold is already breached. XGBoost: 98.55 percent, 0.85
-milliseconds on the Pi 5, and inspectable.""")
+    s = new_slide(prs, 9, "We benchmarked all six on the same split")
+    headers = ["Model", "Accuracy", "Macro F1", "Latency", "Size", "Edge", "Verdict"]
+    end_y = table(s, M, BODY_Y + 0.02, SW - 2*M, BENCH_ROWS and headers, BENCH_ROWS,
+                  col_w=[1.60, 1.05, 1.00, 1.00, 0.95, 0.80, 2.30],
+                  head_h=0.42, row_h=0.46, fs=11, hfs=10)
+    picture(s, G("fig_model_benchmark.png"), M + 0.30, end_y + 0.14,
+            SW - 2*M - 0.60, 1.56)
+    text(s, M, end_y + 1.80, SW - 2*M, 0.42, BENCH_FOOT, size=8.2,
+         color=MUTED, line=1.24)
+    notes(s, BENCH_NOTES)
 
     # -------------------------------------------------- 10 model performance
     s = new_slide(prs, 10, "Where the model is strong, and where it is not")
@@ -533,7 +539,7 @@ milliseconds on the Pi 5, and inspectable.""")
     text(s, M + 0.22, 4.38, LEFT_W - 0.44, 0.26, "WE ARE NOT HIDING THIS",
          size=10, color=CRITICAL, bold=True)
     text(s, M + 0.22, 4.70, LEFT_W - 0.44, 1.74,
-         "28.6% of true Cell Imbalance samples are predicted Undervoltage. The two "
+         "28.7% of true Cell Imbalance samples are predicted Undervoltage. The two "
          "share a signature: one cell drops, pack voltage follows. Separating them "
          "needs more real imbalance events, not more synthetic ones — which is "
          "exactly what the next data campaign is for.",
@@ -544,7 +550,7 @@ milliseconds on the Pi 5, and inspectable.""")
 Here is the honest breakdown. Normal, Overvoltage and Overtemperature all clear
 ninety-seven percent F1 — those classes are solved. Cell Imbalance recall is
 sixty-five percent, and that is the weakest number in this deck. Look at where
-the misses go: twenty-eight point six percent of true imbalance samples get
+the misses go: twenty-eight point seven percent of true imbalance samples get
 predicted as Undervoltage. That is not a random error. A sagging weak cell and
 an undervoltage event share a signature — one cell drops and the pack voltage
 follows. Separating them needs more real imbalance events, and that is what our

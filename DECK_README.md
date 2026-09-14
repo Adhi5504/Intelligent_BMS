@@ -4,8 +4,11 @@ Two cuts of the same material, sharing one design system:
 
 | File | Slides | Talk time | For |
 |---|---|---|---|
-| `AI_PBMS_8Slide.pptx` | 8 | ~4.6 min | the short pitch |
-| `AI_PBMS_Full_Deck.pptx` | 20 | ~12.1 min | the full technical review |
+| `AI_PBMS_8Slide.pptx` | 8 | ~5.4 min | the whole story, condensed |
+| `AI_PBMS_Full_Deck.pptx` | 20 | ~12.6 min | the same material, room to breathe |
+
+The 8-slide cut is not a subset — it carries all twenty slides' content at two to
+three topics per slide, with a two-column bullet block and stacked visuals.
 
 Both are 16:9 (13.333 × 7.5 in), light technical theme, with a speaker note on
 every slide. Rebuild everything with:
@@ -15,12 +18,27 @@ python3 deck/make_charts.py       # figures batch 1   -> assets/generated/
 python3 deck/make_charts2.py      # figures batch 2   -> assets/generated/
 python3 deck/make_diagrams.py     # vector schematics -> assets/generated/
 python3 deck/make_ui.py           # UI mockups + flow -> assets/generated/
+
+# the model benchmark (once; results are committed under outputs/benchmark/)
+python3 deck/prepare_benchmark_data.py   # identical splits for every model
+python3 deck/bench_sklearn.py            # XGBoost, Random Forest, SVM
+python3 deck/bench_torch.py              # LSTM, Transformer (60-row lookback)
+python3 deck/bench_rules.py              # threshold-based BMS baseline
+python3 deck/make_benchmark_chart.py     # -> fig_model_benchmark.png
 python3 deck/build_deck.py        # -> AI_PBMS_8Slide.pptx
 python3 deck/build_deck_full.py   # -> AI_PBMS_Full_Deck.pptx
 ```
 
 `deck/theme.py` holds the single palette/font definition shared by the matplotlib
 figures and the PPTX shapes; `deck/_helpers.py` holds the shared slide primitives.
+
+## The 8-slide running order
+
+1. Why we built the dataset (+ the 289 mV evidence) · 2. Pack topology and the 2RC
+model · 3. Pipeline, features and the balanced training set · 4. **The six-model
+benchmark** · 5. Per-class performance, confidence bands and the OOD gate ·
+6. Hardware tiers and end-to-end system · 7. The platform, driving context and
+cycle prognosis · 8. Multi-chemistry adaptation and roadmap
 
 ## The 20-slide running order
 
@@ -38,7 +56,40 @@ Bold = new in the 20-slide cut.
 
 ## Read this before you present
 
-**1. The 98.55% headline does not match any model in this repository.** The brief
+**1. Every model in the comparison is now measured, and XGBoost is not the most
+accurate.** All six were trained and scored here on the identical 30,000-row
+held-out split with the same 51 features (`deck/bench_*.py`,
+`outputs/benchmark/all_results.json`):
+
+| Model | Accuracy | Macro F1 | Latency | Size | How |
+|---|---|---|---|---|---|
+| XGBoost | 94.19% | 0.905 | 0.462 ms | 1.40 MB | shipped checkpoint |
+| Transformer | 95.11% | 0.918 | 0.419 ms | 0.31 MB | 60-row lookback, 6 epochs, trained in 190s |
+| LSTM | 87.03% | 0.776 | 0.532 ms | 0.28 MB | 60-row lookback, 6 epochs, trained in 59s |
+| Random Forest | 89.37% | 0.824 | 33.770 ms | 176.41 MB | 200 trees, trained in 30s |
+| SVM (RBF) | 88.53% | 0.807 | 0.568 ms | 2.82 MB | 20k subsample, trained in 3s |
+| Rule-based BMS | 22.09% | 0.224 | 0.005 ms | 0.00 MB | project's own NMC thresholds; no Weak Cell rule exists |
+
+The **Transformer beats XGBoost by 0.92 points** and is smaller. The deck still
+recommends XGBoost, and says why on the slide: the Transformer needs a 60-row
+lookback (a full minute of buffered data at 1 Hz before its first prediction),
+a torch runtime on the Pi, and gives no feature attribution. XGBoost predicts
+from one row instantly and is inspectable. That is an engineering decision, and
+the deck now presents it as one rather than as an accuracy win. If you would
+rather ship the Transformer, the numbers support it — say so and I will reframe
+the slide.
+
+Two caveats stated on the slide itself: latency is measured on this 4-core
+container, **not on a Pi 5**; and the RBF SVM was trained on a stratified 20k
+subsample because full-data RBF did not converge in usable time.
+
+The rule-based baseline at **22.09%** is the most useful number on the slide.
+It fails because cell 1's chronic 289 mV gap puts **83.6% of healthy rows over
+the 0.15 V imbalance threshold**, so a conventional controller false-alarms on
+71% of Normal rows — and still scores **0% recall on Weak Cell**, because no
+threshold can express "degrading but inside limits".
+
+**2. The brief's 98.55% does not match any model in this repository.** The brief
 gives 98.55% accuracy / 0.85 ms, and slide 4 states exactly that. But the shipped
 checkpoint `models/bms_xgboost_model.json`, re-evaluated here against the held-out
 test split of `data/augmented_telemetry_dataset.xlsx` (30,000 rows), scores
@@ -49,7 +100,7 @@ me at the 98.55% artefacts and I will regenerate the matrix, or drop slide 4 to
 94.21% so the deck is internally consistent. Raw numbers:
 `assets/generated/confusion_matrix_source.json`.
 
-**2. Two brief-supplied figures could not be drawn as specified.**
+**3. Two brief-supplied figures could not be drawn as specified.**
 
 - *Fault class distribution, six bars.* Only one proportion exists — Cell
   Imbalance at 70.2%. The per-class split of the remaining 29.8% is not in the
@@ -68,7 +119,7 @@ me at the 98.55% artefacts and I will regenerate the matrix, or drop slide 4 to
   Transformer over five classes — I left it out because the brief said to use only
   its own numbers, but it is available.
 
-**3. What the OCV–SOC chart actually plots.** The NMC curve is real: the
+**4. What the OCV–SOC chart actually plots.** The NMC curve is real: the
 breakpoint table `[43.3 … 90.9]% → [27.3 … 32.58] V` lifted from the 1-D Lookup
 Table block inside `E2RC_FINAL_4000sec_model.mdl`, this project's own 2RC
 parameter-estimation model, divided by 8 for per-cell. No LFP cell was
@@ -76,7 +127,7 @@ characterised here, so **LFP is drawn as its 2.50–3.65 V datasheet window from
 brief, labelled as a window, not as a curve.** The measured NMC slope
 (13.4 mV per 1% SOC) is computed from those breakpoints.
 
-**4. Dark-theme extracted images — flagged, not used.** Five images in the source
+**5. Dark-theme extracted images — flagged, not used.** Five images in the source
 deck are dark-background MATLAB output: the 3-D module render
 (`p10_img1_x76.png`), the measured-vs-simulated voltage plot
 (`p11_img2_x90.jpeg`), the parameter-estimation convergence plot
@@ -84,17 +135,15 @@ deck are dark-background MATLAB output: the 3-D module render
 deck. The measured-vs-simulated and Scope plots are the valuable ones — if you
 send the underlying time series I will regenerate them on the light theme.
 
-**5. The web-app screenshots were pasted into chat, not supplied as files**, so
+**6. The web-app screenshots were pasted into chat, not supplied as files**, so
 there was nothing on disk to embed. Both screens — the landing page and the
 Battery Parameters upload screen — are therefore **redrawn as vector mockups**
 (`deck/make_ui.py`) in the deck's own palette, matching the layout, copy and
 accent colours of the screenshots. Send the actual PNGs and I will swap them in;
 `build_deck_full.py` only needs the same two filenames.
 
-**6. Two numbers come from repo file sizes, not the brief.** The "~1.4 MB" and
-"~1.6 MB" in slide 4's Size column are the on-disk sizes of
-`models/bms_xgboost_model.json` (1,395,670 B) and
-`models/battery_fault_transformer.pth` (1,591,456 B). Say the word and they go.
+**7. Model sizes are now measured, not estimated.** Every Size figure is the serialised
+model written to disk during the benchmark run, not an estimate.
 
 ---
 

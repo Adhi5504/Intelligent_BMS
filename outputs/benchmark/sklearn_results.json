@@ -1,0 +1,23 @@
+{
+  "XGBoost": {
+    "accuracy": 0.9419333333333333,
+    "macro_f1": 0.9046917000801568,
+    "latency_ms": 0.46158850000210805,
+    "size_mb": 1.39567,
+    "note": "shipped checkpoint"
+  },
+  "Random Forest": {
+    "accuracy": 0.8937333333333334,
+    "macro_f1": 0.8236112329963,
+    "latency_ms": 33.77024850001931,
+    "size_mb": 176.405417,
+    "note": "200 trees, trained in 30s"
+  },
+  "SVM (RBF)": {
+    "accuracy": 0.8853333333333333,
+    "macro_f1": 0.8070429221821137,
+    "latency_ms": 0.5677974999969138,
+    "size_mb": 2.819779,
+    "note": "20k subsample, trained in 3s"
+  }
+}

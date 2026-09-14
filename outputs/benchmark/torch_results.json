@@ -1,0 +1,16 @@
+{
+  "LSTM": {
+    "accuracy": 0.8702666666666666,
+    "macro_f1": 0.7757391364847557,
+    "latency_ms": 0.5317894999734563,
+    "size_mb": 0.275847,
+    "note": "60-row lookback, 6 epochs, trained in 59s"
+  },
+  "Transformer": {
+    "accuracy": 0.9510666666666666,
+    "macro_f1": 0.9184022486464323,
+    "latency_ms": 0.41925349995608485,
+    "size_mb": 0.30953,
+    "note": "60-row lookback, 6 epochs, trained in 190s"
+  }
+}
