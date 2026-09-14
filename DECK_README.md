@@ -40,6 +40,26 @@ benchmark** · 5. Per-class performance, confidence bands and the OOD gate ·
 6. Hardware tiers and end-to-end system · 7. The platform, driving context and
 cycle prognosis · 8. Multi-chemistry adaptation and roadmap · 9. **References**
 
+## Deployment topology
+
+Corrected after review — the deck previously said the dashboard was served from
+the Pi over a **Cloudflare tunnel**, which is what `scripts/start_all.sh` still
+does. The live system uses **Railway**, and the split is:
+
+| Tier | Runs where | What |
+|---|---|---|
+| Edge | Raspberry Pi 5, on the pack | `jbd_logger v9`, 51-feature engineering, **XGBoost inference and the OOD gate** |
+| Cloud | Railway | Flask dashboard (REST + SSE), risk scoring, cycle engine, PostgreSQL |
+| Interface | any browser | Live Monitor, Configurator, Battery Parameters |
+
+Inference stays on the Pi, so the "no link, no safety gap" argument on slide 6
+holds. The Pi **dials out** to Railway rather than accepting connections, so the
+"no inbound port on the pack" point also survives the change — it just comes
+from outbound-only networking now rather than from a tunnel.
+
+`scripts/start_all.sh` still launches `cloudflared`; if that script is dead,
+worth deleting it so the repo matches the deck.
+
 ## References (slide 9 / slide 21)
 
 The five literature entries are taken **verbatim** from the literature slide of

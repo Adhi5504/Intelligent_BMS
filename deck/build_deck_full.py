@@ -288,7 +288,7 @@ def closing_slide(prs, n):
         ("Lift OOD recall", "The gate never cries wolf, but catches one unknown in four. "
          "A tighter score threshold trades that off.", WARNING),
         ("Move inference to the Zynq-7000", "Tree traversal in programmable logic frees the "
-         "CPU for the dashboard and the BLE link.", ACCENT),
+         "CPU for the logger and the BLE link.", ACCENT),
         ("Characterise a second chemistry", "LFP is remapped from its datasheet; it has not "
          "been driven on a bench the way NMC has.", ACCENT),
         ("SOH and remaining useful life", "dV/dt during CC-CV charging is the signal; the "
@@ -352,7 +352,7 @@ METHODS = [
 ]
 
 STACK = ("xgboost 3.2.0  ·  scikit-learn 1.9.1  ·  torch 2.14.0  ·  numpy 2.4.6\n"
-         "bleak  ·  Flask  ·  PostgreSQL  ·  Cloudflare Tunnel  ·  MATLAB / Simulink")
+         "bleak  ·  Flask  ·  PostgreSQL  ·  Railway  ·  MATLAB / Simulink")
 
 
 def references_slide(prs, n):
@@ -735,7 +735,7 @@ deliberately — on a safety dashboard, never crying wolf matters more.""")
          size=10, color=ACCENT, bold=True)
     text(s, M + 0.22, 5.60, LEFT_W - 0.44, 0.76,
          "Zynq-7000 SoC moves the same tree traversal into programmable logic, "
-         "freeing the CPU for the dashboard and the BLE link.",
+         "freeing the CPU for the logger and the BLE link.",
          size=13, color=INK, line=1.22)
     picture(s, G("diag_hardware.png"), VIS_X, BODY_Y + 0.02, VIS_W, 3.05)
     hy = BODY_Y + 3.20
@@ -745,8 +745,8 @@ deliberately — on a safety dashboard, never crying wolf matters more.""")
     caption(s, VIS_X + VIS_W/2 + 0.10, hy + 1.58, VIS_W/2 - 0.10, "Arduino Uno R4 WiFi")
     notes(s, """
 Three tiers, each doing what the others cannot. The JBD BMS senses: eight taps,
-four thermistors, pack voltage and current. The Pi 5 runs the logger, the
-inference and the dashboard. Inference sits at the edge deliberately — push it
+four thermistors, pack voltage and current. The Pi 5 runs the logger and the
+inference. Inference sits at the edge deliberately — push it
 to a server and every network hiccup becomes an unmonitored window. The third
 tier exists because general-purpose computers hang. An Arduino on its own rail
 watches for a heartbeat and pulls the Pi's RUN pin if it stops. Zynq-7000 is our
@@ -758,10 +758,10 @@ path to take inference off the CPU entirely.""")
     cols = [
         ("EDGE", "Sampling, feature engineering and inference all happen on the pack. "
                  "The Pi never needs the network to keep the pack safe.", ACCENT),
-        ("SERVICE", "Flask exposes REST and server-sent events; PostgreSQL holds "
-                    "telemetry, cycle history and the active chemistry profile.", ACCENT),
-        ("INTERFACE", "Three browser surfaces over one Cloudflare tunnel — no inbound "
-                      "port is ever opened on the Pi.", CRITICAL),
+        ("CLOUD", "Railway hosts the Flask dashboard — REST and server-sent events — "
+                 "with PostgreSQL for telemetry, cycle history and the active profile.", ACCENT),
+        ("INTERFACE", "Three browser surfaces served from Railway; the Pi only ever "
+                      "dials out, so no inbound port is opened on the pack.", CRITICAL),
     ]
     cwid = (SW - 2*M - 2*0.24) / 3
     for i, (t, d, col) in enumerate(cols):
@@ -773,17 +773,17 @@ path to take inference off the CPU entirely.""")
     notes(s, """
 This is the whole system on one slide. Three columns. On the edge, sampling,
 feature engineering and inference all happen on the pack itself — the Pi never
-needs the network to keep the battery safe. In the middle, a Flask service
-exposes REST and server-sent events, with PostgreSQL holding telemetry, cycle
-history and the active chemistry profile. On the right, three browser surfaces.
-All of it goes out through a Cloudflare tunnel, which means we never open an
-inbound port on the Pi — a reviewer can open the dashboard from anywhere and the
-attack surface stays closed.""")
+needs the network to keep the battery safe. In the middle, Railway hosts the Flask
+dashboard — REST and server-sent events — with PostgreSQL holding telemetry,
+cycle history and the active chemistry profile. On the right, three browser surfaces.
+The Pi pushes results up to Railway, which means we never open an
+inbound port on the pack — a reviewer can open the dashboard from anywhere and
+the attack surface on the hardware stays closed.""")
 
     # ------------------------------------------------------- 15 dashboard
     s = new_slide(prs, 15, "The dashboard an operator actually reads")
     bullets(s, M, BODY_Y + 0.10, LEFT_W, 3.10, [
-        "Flask on the Pi, exposed over a Cloudflare tunnel.",
+        "Flask dashboard deployed on Railway.",
         "Live per-cell voltages, pack current and four temperature zones.",
         "Charge and discharge ETA smoothed with an EMA filter.",
         "Driving context from current magnitude at T versus T-1.",
@@ -806,7 +806,7 @@ attack surface stays closed.""")
     caption(s, VIS_X, BODY_Y + 4.78, VIS_W,
             "Live sensing tiles (top) and the critical-alarm path (bottom)")
     notes(s, """
-The dashboard is Flask on the Pi, published through a Cloudflare tunnel. It is
+The dashboard is a Flask service on Railway, fed by the Pi. It is
 operator-facing, not engineer-facing: live per-cell voltages, pack current with
 direction, four thermal zones, and a charge or discharge ETA smoothed with an
 EMA so it does not jitter. The piece worth noting is driving context. Four modes

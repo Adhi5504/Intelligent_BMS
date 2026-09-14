@@ -303,7 +303,7 @@ METHODS = [
 ]
 
 STACK = ("xgboost 3.2.0  ·  scikit-learn 1.9.1  ·  torch 2.14.0  ·  numpy 2.4.6\n"
-         "bleak  ·  Flask  ·  PostgreSQL  ·  Cloudflare Tunnel  ·  MATLAB / Simulink")
+         "bleak  ·  Flask  ·  PostgreSQL  ·  Railway  ·  MATLAB / Simulink")
 
 
 def references_slide(prs, n):
@@ -525,17 +525,17 @@ positives, catching one unknown in four. Tuned that way deliberately.""")
     s = new_slide(prs, 6, "Three tiers at the edge, three surfaces in the browser")
     two_col_bullets(s, M, BODY_Y + 0.08, LEFT_W, 2.10, [
         "JBD BMS senses eight taps and four NTCs.",
-        "Pi 5 runs logger, inference and dashboard.",
+        "Pi 5 runs the logger and XGBoost inference.",
         "Arduino R4 watches the Pi's heartbeat.",
         "Missed beat pulls RUN pin, resets the Pi.",
         "Inference stays local: no link, no safety gap.",
-        "Cloudflare tunnel opens no inbound port.",
+        "Pi dials out to Railway — no inbound port.",
     ], size=13.5)
     rect(s, M, 3.94, LEFT_W, 1.18, fill=PANEL, line=HAIRLINE, lw=0.75)
     mini_head(s, M + 0.22, 4.06, LEFT_W - 0.44, "ACCELERATION PATH")
     text(s, M + 0.22, 4.34, LEFT_W - 0.44, 0.70,
          "Zynq-7000 SoC moves the same tree traversal into programmable logic, "
-         "freeing the CPU for the dashboard and the BLE link.",
+         "freeing the CPU for the logger and the BLE link.",
          size=11.5, color=INK, line=1.24)
     hy = 5.26
     picture(s, E("p06_img1_x51.jpeg"), M, hy, LEFT_W/2 - 0.12, 1.10, card=True)
@@ -546,17 +546,18 @@ positives, catching one unknown in four. Tuned that way deliberately.""")
     picture(s, G("diag_system_flow.png"), VIS_X, BODY_Y + 2.62, VIS_W, 2.55)
     notes(s, """
 Three tiers, each doing what the others cannot. The BMS senses, the Pi 5 runs
-the logger and the inference and the dashboard, and an Arduino on its own power
+the logger and the inference, and an Arduino on its own power
 rail watches for a heartbeat — if it stops, it pulls the Pi's RUN pin and forces
 a reset. Inference sits at the edge deliberately: push it to a server and every
 network hiccup becomes an unmonitored window. The lower diagram is the whole
-data path — edge, service, interface — with everything published through a
-Cloudflare tunnel so we never open an inbound port on the Pi.""")
+data path. Inference happens on the Pi; the dashboard is a Flask service
+deployed on Railway, and the Pi pushes results up to it. Because the Pi only ever
+dials out, we never open an inbound port on the pack itself.""")
 
     # =============================================================== 7
     s = new_slide(prs, 7, "The platform an operator actually uses")
     two_col_bullets(s, M, BODY_Y + 0.08, LEFT_W, 2.10, [
-        "Flask on the Pi, live per-cell voltages.",
+        "Flask dashboard on Railway, live per-cell voltages.",
         "Pack current and four temperature zones.",
         "Charge/discharge ETA smoothed by EMA.",
         "Four driving modes from |I(T)| vs |I(T-1)|.",
@@ -582,7 +583,8 @@ Cloudflare tunnel so we never open an inbound port on the Pi.""")
     picture(s, E("p07_img1_x61.jpeg"), VIS_X, BODY_Y + 2.08, VIS_W, 1.50, card=True)
     picture(s, G("fig_cycle_history.png"), VIS_X, BODY_Y + 3.68, VIS_W, 1.55)
     notes(s, """
-The platform is Flask on the Pi behind a Cloudflare tunnel. It is
+The Pi runs the classifier locally and pushes results to a Flask
+dashboard deployed on Railway, which is what you open in a browser. It is
 operator-facing: live per-cell voltages, pack current with direction, four
 thermal zones, and an ETA smoothed with an EMA so it does not jitter. The piece
 worth calling out is driving context — four modes derived from the change in

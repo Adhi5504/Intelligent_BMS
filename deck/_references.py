@@ -35,7 +35,7 @@ METHODS = [
 ]
 
 STACK = ("xgboost 3.2.0  ·  scikit-learn 1.9.1  ·  torch 2.14.0  ·  numpy 2.4.6\n"
-         "bleak  ·  Flask  ·  PostgreSQL  ·  Cloudflare Tunnel  ·  MATLAB / Simulink")
+         "bleak  ·  Flask  ·  PostgreSQL  ·  Railway  ·  MATLAB / Simulink")
 
 
 def references_slide(prs, n):

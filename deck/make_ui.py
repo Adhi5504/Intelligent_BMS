@@ -182,16 +182,16 @@ def battery_params():
 def system_flow():
     fig, ax = canvas(9.6, 3.9, (0, 19.2), (0, 7.8))
 
-    lanes = [("EDGE", 0.35, 6.05, ACCENT), ("SERVICE", 6.70, 6.05, ACCENT),
+    lanes = [("EDGE", 0.35, 6.05, ACCENT), ("CLOUD", 6.70, 6.05, ACCENT),
              ("INTERFACE", 13.05, 5.80, INDIGO)]
     blocks = [
         # (lane_x, y, w, h, title, sub, edge colour, fill)
         (0.35, 4.40, 6.05, 2.05, "8S2P pack + JBD BMS", "8 cell taps · 4 NTC · pack V/I", ACCENT, BG),
-        (0.35, 1.95, 6.05, 2.05, "Raspberry Pi 5", "jbd_logger v9 · 51-feature\nengineering · XGBoost", ACCENT, ACCENT_TINT),
+        (0.35, 1.95, 6.05, 2.05, "Raspberry Pi 5", "jbd_logger v9 · 51 features\nXGBoost inference · OOD gate", ACCENT, ACCENT_TINT),
         (0.35, 0.30, 6.05, 1.25, "Arduino Uno R4", "RUN-pin watchdog", WARNING, WARNING_TINT),
-        (6.70, 4.40, 6.05, 2.05, "Flask service", "REST + SSE · risk scoring\nOOD gate · cycle engine", ACCENT, BG),
+        (6.70, 4.40, 6.05, 2.05, "Flask dashboard", "on Railway · REST + SSE\nrisk scoring · cycle engine", ACCENT, BG),
         (6.70, 1.95, 6.05, 2.05, "PostgreSQL", "telemetry · cycle history\nactive_profile sync", ACCENT, BG),
-        (6.70, 0.30, 6.05, 1.25, "Cloudflare tunnel", "no inbound ports opened", MUTED, PANEL),
+        (6.70, 0.30, 6.05, 1.25, "Outbound only", "the Pi dials out — no inbound port", MUTED, PANEL),
         (13.05, 4.40, 5.80, 2.05, "Live Monitor", "per-cell V · modes · ETA\nalert history", INDIGO, "#EEF0FE"),
         (13.05, 1.95, 5.80, 2.05, "Configurator", "datasheet parse · pack sizing\nin-browser retraining", INDIGO, "#EEF0FE"),
         (13.05, 0.30, 5.80, 1.25, "Battery Parameters", "PDF + dataset ingestion", INDIGO, BG),
@@ -205,12 +205,12 @@ def system_flow():
                     fontsize=7.6, color=MUTED, linespacing=1.5, zorder=5)
 
     for lx, lw_, lab, col in [(0.35, 6.05, "EDGE — on the pack", ACCENT),
-                              (6.70, 6.05, "SERVICE — on the Pi", ACCENT),
+                              (6.70, 6.05, "CLOUD — Railway", ACCENT),
                               (13.05, 5.80, "INTERFACE — any browser", INDIGO)]:
         ax.text(lx + lw_/2, 6.90, lab, ha="center", va="center", fontsize=9,
                 fontweight="bold", color=col)
 
-    for x0, x1, y, lab in [(6.40, 6.70, 5.42, "BLE"), (12.75, 13.05, 5.42, "HTTPS")]:
+    for x0, x1, y, lab in [(6.40, 6.70, 5.42, "HTTPS"), (12.75, 13.05, 5.42, "HTTPS")]:
         ax.add_patch(FancyArrowPatch((x0, y), (x1 + 0.02, y), arrowstyle="-|>",
                      mutation_scale=11, color=ACCENT, lw=1.8, zorder=4))
     ax.add_patch(FancyArrowPatch((6.40, 2.97), (6.70, 2.97), arrowstyle="-|>",

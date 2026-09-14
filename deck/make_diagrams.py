@@ -214,7 +214,7 @@ def hardware_blocks():
     box(ax, 0.75, by, bw, bh, "JBD BMS",
         "SP24S007 · 8 cell taps\n4 × NTC · pack V / I", ec=ACCENT, fc=BG)
     box(ax, 7.32, by, bw, bh, "Raspberry Pi 5",
-        "jbd_logger v9 · XGBoost\nFlask dashboard", ec=ACCENT, fc=ACCENT_TINT)
+        "jbd_logger v9 · 51 features\nXGBoost inference · OOD gate", ec=ACCENT, fc=ACCENT_TINT)
     box(ax, 13.90, by, bw, bh, "Arduino Uno R4 WiFi",
         "hardware watchdog\nindependent power rail", ec=WARNING, fc=WARNING_TINT)
 
