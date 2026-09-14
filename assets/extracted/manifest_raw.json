@@ -1,0 +1,324 @@
+[
+  {
+    "page": 3,
+    "xref": 38,
+    "file": "p03_img1_x38.jpeg",
+    "w": 770,
+    "h": 576,
+    "bytes": 86103,
+    "corner_rgb": [
+      139,
+      136,
+      134
+    ],
+    "bg": "MID"
+  },
+  {
+    "page": 3,
+    "xref": 39,
+    "file": "p03_img2_x39.jpeg",
+    "w": 747,
+    "h": 397,
+    "bytes": 53249,
+    "corner_rgb": [
+      0,
+      0,
+      0
+    ],
+    "bg": "DARK"
+  },
+  {
+    "page": 6,
+    "xref": 51,
+    "file": "p06_img1_x51.jpeg",
+    "w": 620,
+    "h": 542,
+    "bytes": 30249,
+    "corner_rgb": [
+      255,
+      255,
+      255
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 6,
+    "xref": 52,
+    "file": "p06_img2_x52.jpeg",
+    "w": 391,
+    "h": 297,
+    "bytes": 15428,
+    "corner_rgb": [
+      199,
+      199,
+      199
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 7,
+    "xref": 61,
+    "file": "p07_img1_x61.jpeg",
+    "w": 1518,
+    "h": 573,
+    "bytes": 54898,
+    "corner_rgb": [
+      145,
+      145,
+      149
+    ],
+    "bg": "MID"
+  },
+  {
+    "page": 7,
+    "xref": 62,
+    "file": "p07_img2_x62.jpeg",
+    "w": 1495,
+    "h": 642,
+    "bytes": 81218,
+    "corner_rgb": [
+      138,
+      138,
+      143
+    ],
+    "bg": "MID"
+  },
+  {
+    "page": 8,
+    "xref": 66,
+    "file": "p08_img1_x66.png",
+    "w": 1471,
+    "h": 712,
+    "bytes": 134673,
+    "corner_rgb": [
+      246,
+      245,
+      250
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 8,
+    "xref": 68,
+    "file": "p08_img2_x68.png",
+    "w": 1536,
+    "h": 530,
+    "bytes": 123384,
+    "corner_rgb": [
+      141,
+      140,
+      144
+    ],
+    "bg": "MID"
+  },
+  {
+    "page": 9,
+    "xref": 72,
+    "file": "p09_img1_x72.png",
+    "w": 1495,
+    "h": 720,
+    "bytes": 71339,
+    "corner_rgb": [
+      245,
+      244,
+      249
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 10,
+    "xref": 76,
+    "file": "p10_img1_x76.png",
+    "w": 736,
+    "h": 482,
+    "bytes": 42342,
+    "corner_rgb": [
+      32,
+      27,
+      29
+    ],
+    "bg": "DARK"
+  },
+  {
+    "page": 11,
+    "xref": 89,
+    "file": "p11_img1_x89.png",
+    "w": 245,
+    "h": 108,
+    "bytes": 16989,
+    "corner_rgb": [
+      40,
+      52,
+      61
+    ],
+    "bg": "DARK"
+  },
+  {
+    "page": 11,
+    "xref": 90,
+    "file": "p11_img2_x90.jpeg",
+    "w": 347,
+    "h": 377,
+    "bytes": 14309,
+    "corner_rgb": [
+      32,
+      32,
+      32
+    ],
+    "bg": "DARK"
+  },
+  {
+    "page": 11,
+    "xref": 91,
+    "file": "p11_img3_x91.png",
+    "w": 343,
+    "h": 371,
+    "bytes": 33071,
+    "corner_rgb": [
+      32,
+      32,
+      32
+    ],
+    "bg": "DARK"
+  },
+  {
+    "page": 12,
+    "xref": 96,
+    "file": "p12_img1_x96.jpeg",
+    "w": 1600,
+    "h": 557,
+    "bytes": 40825,
+    "corner_rgb": [
+      255,
+      255,
+      255
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 12,
+    "xref": 102,
+    "file": "p12_img2_x102.png",
+    "w": 208,
+    "h": 96,
+    "bytes": 1779,
+    "corner_rgb": [
+      238,
+      248,
+      247
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 12,
+    "xref": 103,
+    "file": "p12_img3_x103.png",
+    "w": 212,
+    "h": 97,
+    "bytes": 1875,
+    "corner_rgb": [
+      238,
+      248,
+      247
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 12,
+    "xref": 104,
+    "file": "p12_img4_x104.png",
+    "w": 218,
+    "h": 101,
+    "bytes": 1637,
+    "corner_rgb": [
+      238,
+      248,
+      247
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 12,
+    "xref": 105,
+    "file": "p12_img5_x105.png",
+    "w": 212,
+    "h": 96,
+    "bytes": 1923,
+    "corner_rgb": [
+      238,
+      248,
+      247
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 12,
+    "xref": 106,
+    "file": "p12_img6_x106.png",
+    "w": 198,
+    "h": 101,
+    "bytes": 1571,
+    "corner_rgb": [
+      238,
+      248,
+      247
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 13,
+    "xref": 109,
+    "file": "p13_img1_x109.png",
+    "w": 272,
+    "h": 197,
+    "bytes": 4114,
+    "corner_rgb": [
+      255,
+      255,
+      255
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 13,
+    "xref": 110,
+    "file": "p13_img2_x110.png",
+    "w": 297,
+    "h": 187,
+    "bytes": 4058,
+    "corner_rgb": [
+      14,
+      124,
+      123
+    ],
+    "bg": "DARK"
+  },
+  {
+    "page": 13,
+    "xref": 111,
+    "file": "p13_img3_x111.png",
+    "w": 285,
+    "h": 192,
+    "bytes": 4859,
+    "corner_rgb": [
+      255,
+      255,
+      255
+    ],
+    "bg": "LIGHT"
+  },
+  {
+    "page": 13,
+    "xref": 112,
+    "file": "p13_img4_x112.png",
+    "w": 1397,
+    "h": 557,
+    "bytes": 48164,
+    "corner_rgb": [
+      108,
+      108,
+      108
+    ],
+    "bg": "DARK"
+  }
+]
