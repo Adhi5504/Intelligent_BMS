@@ -414,6 +414,45 @@ manufacturer datasheets the threshold matrix is parsed from, and the JBD
 protocol spec the logger was written against. Happy to take questions.""")
     return s
 
+# ============================================= fault-detection architecture
+def fault_flow_slide(prs, n):
+    """Full-bleed architecture diagram — the flow the deck has been describing,
+    end to end, with the independent hardware-protection lane underneath."""
+    s = new_slide(prs, n, "Fault detection, end to end")
+    picture(s, os.path.join(GEN, "diag_fault_flow.png"), M, BODY_Y - 0.08,
+            SW - 2*M, 4.28)
+    cards = [
+        ("FIVE STAGES", "Acquire → establish context → detect → score risk → act. "
+                        "Every block maps to a module in the repository.", ACCENT),
+        ("MODE FIRST", "Context is resolved before detection, because the same "
+                       "voltage sag means different things in ACCEL and IDLE.", WARNING),
+        ("TWO PATHS", "The ML lane can abstain or be wrong. The hardware lane "
+                      "cannot — it runs at the pack, with no software in it.", CRITICAL),
+    ]
+    cw = (SW - 2*M - 2*0.24) / 3
+    for i, (t, d, col) in enumerate(cards):
+        cx = M + i * (cw + 0.24)
+        rect(s, cx, 5.82, cw, 1.10, fill=PANEL, line=HAIRLINE, lw=0.75)
+        b = rect(s, cx, 5.82, cw, 0.055, fill=col); b.line.fill.background()
+        text(s, cx + 0.20, 5.96, cw - 0.40, 0.22, t, size=9, color=col, bold=True)
+        text(s, cx + 0.20, 6.22, cw - 0.40, 0.64, d, size=9.5, color=INK, line=1.22)
+    notes(s, """
+This is the whole fault path on one slide. Five stages. Acquisition: the BMS
+senses, BLE carries it at one hertz, and we reject any row that is NaN or all
+zeros before it reaches the model. Context: we resolve the operating mode first,
+because a voltage sag under acceleration is normal and the same sag at idle is a
+fault — the mode flags are twelve percent of the model's gain. Detection: the
+IsolationForest gate runs before the classifier, so an unfamiliar window is
+escalated rather than forced into one of six labels. Risk: the class probability
+is multiplied by a physical severity derived from how far past the datasheet
+warning limit we are, raised further if the fault persists. Action: corrective
+instruction, logged alert, and comparison against the cycle history. And
+underneath all of it, the lane that does not depend on any of this — the JBD
+protection logic switching the MOSFETs at the pack, and the Arduino watchdog that
+resets the Pi. If every line of our software failed, that lane still opens the
+contactor.""")
+    return s
+
 # =========================================================== the slides
 def build():
     prs = Presentation()
@@ -721,8 +760,11 @@ synthetic-unknown windows: AUROC of 0.913, one hundred percent precision, zero
 false positives. It catches one unknown in four. We tuned it that way
 deliberately — on a safety dashboard, never crying wolf matters more.""")
 
-    # ------------------------------------------------------- 13 hardware
-    s = new_slide(prs, 13, "Three tiers, no single point of failure")
+    # --------------------------------------------------- 13 fault flow
+    fault_flow_slide(prs, 13)
+
+    # ------------------------------------------------------- 14 hardware
+    s = new_slide(prs, 14, "Three tiers, no single point of failure")
     bullets(s, M, BODY_Y + 0.10, LEFT_W, 3.10, [
         "Tier 1 — JBD BMS senses eight cell taps and four NTCs.",
         "Tier 2 — Pi 5 runs logger, XGBoost inference and dashboard.",
@@ -753,7 +795,7 @@ watches for a heartbeat and pulls the Pi's RUN pin if it stops. Zynq-7000 is our
 path to take inference off the CPU entirely.""")
 
     # ---------------------------------------------------- 14 system flow
-    s = new_slide(prs, 14, "How the whole thing fits together")
+    s = new_slide(prs, 15, "How the whole thing fits together")
     picture(s, G("diag_system_flow.png"), M, BODY_Y + 0.12, SW - 2*M, 3.35)
     cols = [
         ("EDGE", "Sampling, feature engineering and inference all happen on the pack. "
@@ -781,7 +823,7 @@ inbound port on the pack — a reviewer can open the dashboard from anywhere and
 the attack surface on the hardware stays closed.""")
 
     # ------------------------------------------------------- 15 dashboard
-    s = new_slide(prs, 15, "The dashboard an operator actually reads")
+    s = new_slide(prs, 16, "The dashboard an operator actually reads")
     bullets(s, M, BODY_Y + 0.10, LEFT_W, 3.10, [
         "Flask dashboard deployed on Railway.",
         "Live per-cell voltages, pack current and four temperature zones.",
@@ -815,7 +857,7 @@ under hard acceleration is normal, and the same sag at idle is a fault.
 Thresholds follow the mode.""")
 
     # ------------------------------------------ 16 thermal + driving context
-    s = new_slide(prs, 16, "Context is a feature, not a label on a chart")
+    s = new_slide(prs, 17, "Context is a feature, not a label on a chart")
     bullets(s, M, BODY_Y + 0.14, LEFT_W, 2.55, [
         "Four NTCs diverge by up to 8.3 °C within one pack.",
         "That spread is fed to the model as ntc_spread.",
@@ -843,7 +885,7 @@ the model's total gain. That is context the pack-level sensors alone could never
 give us.""")
 
     # ------------------------------------------------- 17 cycle prognosis
-    s = new_slide(prs, 17, "Comparing this cycle against every cycle before it")
+    s = new_slide(prs, 18, "Comparing this cycle against every cycle before it")
     bullets(s, M, BODY_Y + 0.14, LEFT_W, 3.05, [
         "39 cycles logged: 21 discharge, 18 charge.",
         "Every cycle scored 1.0 on data quality; zero alerts raised.",
@@ -870,7 +912,7 @@ shows the balancing working: end-of-cycle spread is consistently below
 start-of-cycle spread.""")
 
     # ------------------------------------------------- 18 battery params UI
-    s = new_slide(prs, 18, "Two uploads is the entire onboarding flow")
+    s = new_slide(prs, 19, "Two uploads is the entire onboarding flow")
     bullets(s, M, BODY_Y + 0.14, LEFT_W, 3.05, [
         "Drop the manufacturer PDF: chemistry and limits are parsed out.",
         "Drop a CSV or XLSX: the dataset is profiled and previewed.",
@@ -899,7 +941,7 @@ becomes the active profile. That same screen feeds both the threshold matrix and
 the retrainer.""")
 
     # ----------------------------------------------- 19 multi-chemistry
-    s = new_slide(prs, 19, "Swap the chemistry, not the codebase")
+    s = new_slide(prs, 20, "Swap the chemistry, not the codebase")
     bullets(s, M, BODY_Y + 0.06, LEFT_W, 3.32, [
         "Upload a datasheet PDF; the parser reads the limits.",
         "Extracts V_nom, V_max, V_min, capacity, current, thermal.",
@@ -929,10 +971,10 @@ nominal, needs every limit rescaled. Thresholds are two-tier, and the active
 profile syncs to PostgreSQL live with no server restart.""")
 
     # ------------------------------------------------------------ 20 close
-    closing_slide(prs, 20)
+    closing_slide(prs, 21)
 
     # ------------------------------------------------------------ 21 refs
-    references_slide(prs, 21)
+    references_slide(prs, 22)
 
     prs.save(OUT)
     print("wrote", os.path.relpath(OUT, ROOT), "|", len(prs.slides.__iter__.__self__._sldIdLst), "slides")

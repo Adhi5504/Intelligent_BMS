@@ -40,6 +40,40 @@ benchmark** · 5. Per-class performance, confidence bands and the OOD gate ·
 6. Hardware tiers and end-to-end system · 7. The platform, driving context and
 cycle prognosis · 8. Multi-chemistry adaptation and roadmap · 9. **References**
 
+## Fault-detection architecture (slide 6 / slide 13)
+
+`diag_fault_flow.png` — the whole fault path as one flow, in the five-lane shape
+of the team's original flowchart. Rebuild with `python3 deck/make_fault_flow.py`.
+
+| Lane | Blocks | Source |
+|---|---|---|
+| 1 Acquisition | pack → JBD sensing → BLE 1 Hz → data-integrity check → 51 features | `bms_bluetooth_gateway.py`, `train_xgboost.py:engineer_features` |
+| 2 Context | operating-mode decision → IDLE/ACCEL/CRUISE/DECEL → mode-specific thresholds → one-hot | `mode_classifier.py`, `mode_thresholds.json` |
+| 3 Detection | IsolationForest gate (score < −0.5907, 2-of-3 hysteresis) → UNKNOWN_FAULT_OOD, else XGBoost → 6 classes | `ood_config.json`, `predict_fault.py` |
+| 4 Risk | confidence band → physical severity → persistence → risk = confidence × severity | `risk_scoring.py`, `fault_risk_config.py` |
+| 5 Action | persistent? → corrective action → alert history → cycle comparison → loop | `bms_dashboard_backend.py` |
+| Hardware lane | JBD protection logic → MOSFET gate → immediate disconnect; Arduino RUN-pin watchdog | JBD SP24S007, `start_all.sh` |
+
+**Differences from the original hand-drawn flowchart, and why.** The supplied
+chart is a design-intent diagram; several blocks in it do not match what was
+built, so the deck version uses the implementation:
+
+| Original chart | Implemented |
+|---|---|
+| "Transformer AI model" | **XGBoost** — the deck benchmarks both and explains the choice on slide 4 |
+| "Anomaly detection (LOF + temporal scoring)" | **IsolationForest** with 2-of-3 frame hysteresis |
+| ~20 leaf fault types, mode-specific | **6 classes** — the model's actual label set |
+| Temperature/voltage/current **sensor drift**, coulomb-counting drift, internal short circuit, internal resistance growth, self-discharge anomaly | not modelled; also, the brief explicitly bans "Sensor Drift" wording |
+| Minor / Major / Critical | **Low / Moderate / High / Critical** at 0.35, 0.65, 0.85 (`classify_severity`) |
+
+The structure the chart gets right — mode resolved before detection, severity
+and persistence before action, and an independent fast-hardware lane — is kept
+exactly, because that is what the code does.
+
+`watchdog.py` and the Arduino sketch are referenced by `scripts/start_all.sh`
+but are **not in the repository**, so the watchdog block is described
+behaviourally (serial heartbeat, RUN-pin reset) rather than at register level.
+
 ## Deployment topology
 
 Corrected after review — the deck previously said the dashboard was served from
