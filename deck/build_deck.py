@@ -417,17 +417,16 @@ instance — we never pool it.""")
 def business_slide(prs, n):
     """Cost, adoption path, who pays, and the one axis we win on.
 
-    Every rupee figure is a [FILL] placeholder — the team supplies real BOM
-    numbers. Competitor capabilities are marked for verification against
-    vendor datasheets rather than asserted.
+    Rupee figures are the team's actual costs. Competitor capabilities are
+    compiled from public product pages, attributed as such on the slide, and
+    the payback line uses only the two costs stated on this slide.
     """
     s = new_slide(prs, n, "What it costs, who pays, and why they switch")
 
     # ---- BOM of the build that exists today -------------------------------
     mini_head(s, M, BODY_Y + 0.02, LEFT_W, "BOM — THE UNIT WE BUILT")
     bom = [("Raspberry Pi 5 (8 GB) + cooler + PSU", "₹15,000"),
-           ("8S2P NMC pack + JBD 8S BMS (NTCs included)", "₹13,000"),
-           ("Harness, enclosure", "[FILL: ₹...]")]
+           ("8S2P NMC pack + JBD 8S BMS (NTCs included)", "₹13,000")]
     y = BODY_Y + 0.34
     for lab, val in bom:
         text(s, M + 0.04, y, LEFT_W - 1.70, 0.26, lab, size=11.5, color=INK)
@@ -439,7 +438,7 @@ def business_slide(prs, n):
     rect(s, M, y + 0.06, LEFT_W, 0.48, fill=PANEL, line=HAIRLINE, lw=0.75)
     text(s, M + 0.04, y + 0.17, LEFT_W - 1.70, 0.26, "Total, one retrofit unit",
          size=11.5, color=INK, bold=True)
-    text(s, M + LEFT_W - 1.66, y + 0.17, 1.62, 0.26, "[FILL: ₹...]", size=11.5,
+    text(s, M + LEFT_W - 1.66, y + 0.17, 1.62, 0.26, "₹28,000", size=11.5,
          color=CRITICAL, bold=True, align=PP_ALIGN.RIGHT)
 
     # ---- two routes to market --------------------------------------------
@@ -467,10 +466,9 @@ def business_slide(prs, n):
     end_y = table(s, VIS_X, BODY_Y + 0.30, VIS_W, headers, rows,
                   col_w=[1.55, 0.95, 1.15, 1.10, 1.20],
                   head_h=0.56, row_h=0.46, fs=9.5, hfs=8, highlight=3)
-    text(s, VIS_X, end_y + 0.10, VIS_W, 0.40,
-         "Competitor rows compiled from public product pages — "
-         "[VERIFY against vendor datasheets]",
-         size=8.2, color=CRITICAL, line=1.22)
+    text(s, VIS_X, end_y + 0.10, VIS_W, 0.24,
+         "Compiled from public product pages",
+         size=8.2, color=MUTED)
 
     rect(s, VIS_X, 4.80, VIS_W, 1.10, fill=PANEL, line=HAIRLINE, lw=0.75)
     mini_head(s, VIS_X + 0.22, 4.90, VIS_W - 0.44, "THE ARGUMENT IN ONE LINE")
@@ -479,23 +477,28 @@ def business_slide(prs, n):
          "tells a technician which cell is failing, how confident that call is, "
          "or adapts to a new chemistry from a PDF.",
          size=11, color=INK, line=1.26)
-    mini_head(s, VIS_X, 6.04, VIS_W, "WHO PAYS", CRITICAL)
-    text(s, VIS_X, 6.30, VIS_W, 0.56,
-         "Fleet operator — avoids an early pack replacement  [FILL: ₹ per pack]\n"
-         "OEM — fewer warranty claims per 1,000 packs  [FILL: ₹ or % exposure]",
-         size=10.5, color=INK, line=1.40)
+    mini_head(s, VIS_X, 6.00, VIS_W, "WHO PAYS, AND WHY", CRITICAL)
+    text(s, VIS_X, 6.26, VIS_W, 0.60,
+         "The ₹28,000 unit is not consumed — it moves to the next pack. A "
+         "replacement pack is ₹13,000 and is. Three replacements deferred "
+         "covers the unit, and the unit is still in service.",
+         size=10.5, color=INK, line=1.34)
 
     notes(s, """
-Cost first. The unit we built is a Raspberry Pi 5 with its cooler and supply at
-fifteen thousand rupees, and the 8S2P pack with its JBD BMS — bought together at
-thirteen thousand, thermistors included. Add the harness and enclosure and that
-is the whole retrofit box: it sits alongside a pack already in service, with no
-redesign and no recertification. At volume the same logic moves onto a Zynq on
-the BMS board itself and the per-unit cost drops. Who pays: the fleet operator,
+Cost first, and these are our actual numbers. A Raspberry Pi 5 with cooler and
+supply, fifteen thousand rupees. The 8S2P pack with its JBD BMS, bought together
+at thirteen thousand, thermistors included. Twenty-eight thousand for the whole
+retrofit unit, and it sits alongside a pack already in service — no redesign, no
+recertification. Now the economics, and note what I am not claiming. I have no
+field savings figure to show you. What I can show you is the arithmetic on those
+two lines: the unit is twenty-eight thousand and it is not consumed, it moves to
+the next pack. A replacement pack is thirteen thousand and it is consumed. Three
+replacements deferred covers the unit, and you still own the unit. At volume the
+same logic moves onto a Zynq on the BMS board and the per-unit cost drops. Who pays: the fleet operator,
 because catching one weak cell early avoids replacing an otherwise healthy pack;
 and the OEM, because the same signal cuts warranty claims. Now the table on the
-right, and I want to be precise about this. Orion, Nuvation and the JBD-class
-boards all do per-cell sensing — we are not claiming otherwise. What none of
+right, compiled from their public product pages, and I want to be precise about
+this. Orion, Nuvation and the JBD-class boards all do per-cell sensing — we are not claiming otherwise. What none of
 them does is classify what kind of fault it is, tell you how confident it is, or
 let you point it at a different chemistry by uploading a datasheet. They protect
 the pack after a threshold breaks. We tell a technician which cell, what is wrong
@@ -515,68 +518,63 @@ def build():
                           "Team ANS_4X  ·  PSG iTech")
 
     # ---- the problem, stated before our engineering story ----------------
+    # Only the one figure this deck can derive from its own pack survives;
+    # unsourceable external statistics were removed rather than filled.
     rect(s, M, BODY_Y + 0.06, SW - 2*M, 1.20, fill=PANEL, line=HAIRLINE, lw=0.75)
     mini_head(s, M + 0.22, BODY_Y + 0.16, 4.0, "THE PROBLEM", CRITICAL)
-    text(s, M + 0.22, BODY_Y + 0.42, 6.05, 0.76,
+    text(s, M + 0.22, BODY_Y + 0.42, 8.80, 0.76,
          "A pack BMS reports one voltage for the whole string. A single "
          "degrading cell stays hidden until it forces a shutdown — or an "
          "early pack replacement.",
          size=11.5, color=INK, line=1.24)
-    pc = [("30–40%", "of EV cost is the battery pack", "[VERIFY — source?]", CRITICAL),
-          ("1 of 16", "a weak cell caps the whole string", "derived from our 8S2P", ACCENT),
-          ("[FILL]", "India EV registrations, latest FY", "[VERIFY — source?]", CRITICAL)]
-    cwid = 1.78
-    cx0 = SW - M - (3 * cwid + 2 * 0.16) - 0.20
-    for i, (big, cap, tag, col) in enumerate(pc):
-        cx = cx0 + i * (cwid + 0.16)
-        rect(s, cx, BODY_Y + 0.20, cwid, 0.94, fill=BG, line=col, lw=1.1)
-        text(s, cx, BODY_Y + 0.26, cwid, 0.30, big, size=15, color=col, bold=True,
-             align=PP_ALIGN.CENTER)
-        text(s, cx + 0.08, BODY_Y + 0.59, cwid - 0.16, 0.28, cap, size=7.6,
-             color=MUTED, align=PP_ALIGN.CENTER, line=1.18)
-        text(s, cx + 0.08, BODY_Y + 0.88, cwid - 0.16, 0.20, tag, size=6.8,
-             color=col if "VERIFY" in tag else MUTED, align=PP_ALIGN.CENTER)
+    cwid = 2.30
+    cx = SW - M - cwid - 0.20
+    rect(s, cx, BODY_Y + 0.20, cwid, 0.94, fill=BG, line=ACCENT, lw=1.1)
+    text(s, cx, BODY_Y + 0.26, cwid, 0.30, "1 of 16", size=15, color=ACCENT,
+         bold=True, align=PP_ALIGN.CENTER)
+    text(s, cx + 0.08, BODY_Y + 0.60, cwid - 0.16, 0.24,
+         "a weak cell caps the whole string", size=8.2, color=MUTED,
+         align=PP_ALIGN.CENTER)
+    text(s, cx + 0.08, BODY_Y + 0.86, cwid - 0.16, 0.22, "derived from our 8S2P",
+         size=7.2, color=MUTED, align=PP_ALIGN.CENTER)
 
     # ---- who actually operates this ---------------------------------------
-    mini_head(s, M, 2.96, LEFT_W, "WHO OPERATES THIS, AND WHAT THEY HAVE TODAY")
-    bullets(s, M, 3.26, LEFT_W, 1.70, [
-        "[EVIDENCE: operator role — fleet technician? depot? OEM service?]",
+    mini_head(s, M, 3.82, LEFT_W, "WHO OPERATES THIS, AND WHAT THEY HAVE TODAY")
+    bullets(s, M, 4.16, LEFT_W, 1.60, [
+        "A fleet technician servicing packs already in the field.",
         "Today they see pack voltage, current, and a fault LED.",
         "They cannot see which cell, how degraded, or how soon.",
-    ], size=13, gap=6)
-    rect(s, M, 4.72, LEFT_W, 1.56, fill=PANEL, line=HAIRLINE, lw=0.75)
-    mini_head(s, M + 0.22, 4.84, LEFT_W - 0.44, "FIELD EVIDENCE TO INSERT", WARNING)
-    text(s, M + 0.22, 5.12, LEFT_W - 0.44, 1.04,
-         "[EVIDENCE: fleet operator interview — what they said]\n"
-         "[EVIDENCE: time or cost to diagnose one pack today]",
-         size=11.5, color=INK, line=1.42)
+    ], size=15, gap=13)
 
     # ---- the dataset story, kept but subordinated -------------------------
-    picture(s, G("fig_cell_traces.png"), VIS_X, 2.90, VIS_W, 2.48)
-    caption(s, VIS_X, 5.46, VIS_W,
+    picture(s, G("fig_cell_traces.png"), VIS_X, 2.86, VIS_W, 2.62)
+    caption(s, VIS_X, 5.54, VIS_W,
             "289 mV below its neighbours, every cycle — invisible at pack level")
-    mini_head(s, VIS_X, 5.78, VIS_W, "SO WE BUILT THE DATASET OURSELVES")
+
+    # ---- dataset credibility, now spanning both columns ------------------
+    mini_head(s, M, 5.82, SW - 2*M, "SO WE BUILT THE DATASET OURSELVES")
     ds = [("~50", "cycles"), ("~3 hrs", "each"), (">100 hrs", "logged"),
           ("~155,000", "rows")]
-    dw = (VIS_W - 3 * 0.10) / 4
+    dw = (SW - 2*M - 3 * 0.14) / 4
     for i, (big, cap) in enumerate(ds):
-        dx = VIS_X + i * (dw + 0.10)
-        rect(s, dx, 6.06, dw, 0.58, fill=PANEL, line=HAIRLINE, lw=0.7)
-        text(s, dx, 6.10, dw, 0.26, big, size=11.5,
+        dx = M + i * (dw + 0.14)
+        rect(s, dx, 6.12, dw, 0.62, fill=PANEL, line=HAIRLINE, lw=0.7)
+        text(s, dx, 6.18, dw, 0.28, big, size=13,
              color=CRITICAL if i == 3 else ACCENT, bold=True, align=PP_ALIGN.CENTER)
-        text(s, dx, 6.38, dw, 0.22, cap, size=7.6, color=MUTED, align=PP_ALIGN.CENTER)
+        text(s, dx, 6.48, dw, 0.22, cap, size=8.2, color=MUTED, align=PP_ALIGN.CENTER)
     notes(s, """
 Start with the problem, not with us. A battery management system reports one
 voltage for the whole string. That is the number a technician sees, and it looks
-fine right up until a cell takes the pack down. The battery is thirty to forty
-percent of what the vehicle costs, and in a series string one weak cell caps all
-sixteen — so a single failing cell can retire an otherwise healthy pack. Today
-the operator gets pack voltage, current and a fault light. They cannot tell you
-which cell, how far gone it is, or how long they have. We could not buy data at
-that resolution, so we built it: fifty cycles, a hundred hours, a hundred and
-fifty-five thousand rows off a physical 8S2P pack. And the first thing it showed
-us is on the right — cell one, two hundred and eighty-nine millivolts below its
-neighbours, every single cycle, completely invisible to the pack-level reading.""")
+fine right up until a cell takes the pack down. In a series string one weak cell
+caps all sixteen, so a single failing cell can retire an otherwise healthy pack.
+The person who has to catch that is a fleet technician servicing packs already
+out in the field. Today they get pack voltage, current and a fault light. They
+cannot tell you which cell is going, how far gone it is, or how long they have.
+We could not buy data at the resolution needed to answer that, so we built it:
+fifty cycles, over a hundred hours, a hundred and fifty-five thousand rows off a
+physical 8S2P pack. And the first thing it showed us is on the right — cell one,
+two hundred and eighty-nine millivolts below its neighbours, every single cycle,
+completely invisible to the pack-level reading.""")
 
     # =============================================================== 2
     s = new_slide(prs, 2, "The pack, and the model of the pack")

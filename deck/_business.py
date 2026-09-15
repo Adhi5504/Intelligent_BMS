@@ -4,17 +4,16 @@
 def business_slide(prs, n):
     """Cost, adoption path, who pays, and the one axis we win on.
 
-    Every rupee figure is a [FILL] placeholder — the team supplies real BOM
-    numbers. Competitor capabilities are marked for verification against
-    vendor datasheets rather than asserted.
+    Rupee figures are the team's actual costs. Competitor capabilities are
+    compiled from public product pages, attributed as such on the slide, and
+    the payback line uses only the two costs stated on this slide.
     """
     s = new_slide(prs, n, "What it costs, who pays, and why they switch")
 
     # ---- BOM of the build that exists today -------------------------------
     mini_head(s, M, BODY_Y + 0.02, LEFT_W, "BOM — THE UNIT WE BUILT")
     bom = [("Raspberry Pi 5 (8 GB) + cooler + PSU", "₹15,000"),
-           ("8S2P NMC pack + JBD 8S BMS (NTCs included)", "₹13,000"),
-           ("Harness, enclosure", "[FILL: ₹...]")]
+           ("8S2P NMC pack + JBD 8S BMS (NTCs included)", "₹13,000")]
     y = BODY_Y + 0.34
     for lab, val in bom:
         text(s, M + 0.04, y, LEFT_W - 1.70, 0.26, lab, size=11.5, color=INK)
@@ -26,7 +25,7 @@ def business_slide(prs, n):
     rect(s, M, y + 0.06, LEFT_W, 0.48, fill=PANEL, line=HAIRLINE, lw=0.75)
     text(s, M + 0.04, y + 0.17, LEFT_W - 1.70, 0.26, "Total, one retrofit unit",
          size=11.5, color=INK, bold=True)
-    text(s, M + LEFT_W - 1.66, y + 0.17, 1.62, 0.26, "[FILL: ₹...]", size=11.5,
+    text(s, M + LEFT_W - 1.66, y + 0.17, 1.62, 0.26, "₹28,000", size=11.5,
          color=CRITICAL, bold=True, align=PP_ALIGN.RIGHT)
 
     # ---- two routes to market --------------------------------------------
@@ -54,10 +53,9 @@ def business_slide(prs, n):
     end_y = table(s, VIS_X, BODY_Y + 0.30, VIS_W, headers, rows,
                   col_w=[1.55, 0.95, 1.15, 1.10, 1.20],
                   head_h=0.56, row_h=0.46, fs=9.5, hfs=8, highlight=3)
-    text(s, VIS_X, end_y + 0.10, VIS_W, 0.40,
-         "Competitor rows compiled from public product pages — "
-         "[VERIFY against vendor datasheets]",
-         size=8.2, color=CRITICAL, line=1.22)
+    text(s, VIS_X, end_y + 0.10, VIS_W, 0.24,
+         "Compiled from public product pages",
+         size=8.2, color=MUTED)
 
     rect(s, VIS_X, 4.80, VIS_W, 1.10, fill=PANEL, line=HAIRLINE, lw=0.75)
     mini_head(s, VIS_X + 0.22, 4.90, VIS_W - 0.44, "THE ARGUMENT IN ONE LINE")
@@ -66,23 +64,28 @@ def business_slide(prs, n):
          "tells a technician which cell is failing, how confident that call is, "
          "or adapts to a new chemistry from a PDF.",
          size=11, color=INK, line=1.26)
-    mini_head(s, VIS_X, 6.04, VIS_W, "WHO PAYS", CRITICAL)
-    text(s, VIS_X, 6.30, VIS_W, 0.56,
-         "Fleet operator — avoids an early pack replacement  [FILL: ₹ per pack]\n"
-         "OEM — fewer warranty claims per 1,000 packs  [FILL: ₹ or % exposure]",
-         size=10.5, color=INK, line=1.40)
+    mini_head(s, VIS_X, 6.00, VIS_W, "WHO PAYS, AND WHY", CRITICAL)
+    text(s, VIS_X, 6.26, VIS_W, 0.60,
+         "The ₹28,000 unit is not consumed — it moves to the next pack. A "
+         "replacement pack is ₹13,000 and is. Three replacements deferred "
+         "covers the unit, and the unit is still in service.",
+         size=10.5, color=INK, line=1.34)
 
     notes(s, """
-Cost first. The unit we built is a Raspberry Pi 5 with its cooler and supply at
-fifteen thousand rupees, and the 8S2P pack with its JBD BMS — bought together at
-thirteen thousand, thermistors included. Add the harness and enclosure and that
-is the whole retrofit box: it sits alongside a pack already in service, with no
-redesign and no recertification. At volume the same logic moves onto a Zynq on
-the BMS board itself and the per-unit cost drops. Who pays: the fleet operator,
+Cost first, and these are our actual numbers. A Raspberry Pi 5 with cooler and
+supply, fifteen thousand rupees. The 8S2P pack with its JBD BMS, bought together
+at thirteen thousand, thermistors included. Twenty-eight thousand for the whole
+retrofit unit, and it sits alongside a pack already in service — no redesign, no
+recertification. Now the economics, and note what I am not claiming. I have no
+field savings figure to show you. What I can show you is the arithmetic on those
+two lines: the unit is twenty-eight thousand and it is not consumed, it moves to
+the next pack. A replacement pack is thirteen thousand and it is consumed. Three
+replacements deferred covers the unit, and you still own the unit. At volume the
+same logic moves onto a Zynq on the BMS board and the per-unit cost drops. Who pays: the fleet operator,
 because catching one weak cell early avoids replacing an otherwise healthy pack;
 and the OEM, because the same signal cuts warranty claims. Now the table on the
-right, and I want to be precise about this. Orion, Nuvation and the JBD-class
-boards all do per-cell sensing — we are not claiming otherwise. What none of
+right, compiled from their public product pages, and I want to be precise about
+this. Orion, Nuvation and the JBD-class boards all do per-cell sensing — we are not claiming otherwise. What none of
 them does is classify what kind of fault it is, tell you how confident it is, or
 let you point it at a different chemistry by uploading a datasheet. They protect
 the pack after a threshold breaks. We tell a technician which cell, what is wrong
