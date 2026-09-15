@@ -178,7 +178,7 @@ def stat_strip(slide, x, y, w, items):
 
 
 def table(slide, x, y, w, headers, rows, col_w, head_h=0.46, row_h=0.52,
-          fs=11, hfs=10.5):
+          fs=11, hfs=10.5, highlight=0):
     """Hand-built table: rectangles + textboxes, so every colour is ours."""
     total = sum(col_w)
     col_w = [c / total * w for c in col_w]
@@ -193,7 +193,7 @@ def table(slide, x, y, w, headers, rows, col_w, head_h=0.46, row_h=0.52,
     # body
     ry = y + head_h
     for ri, row in enumerate(rows):
-        if ri == 0:                                    # highlight the chosen model
+        if ri == highlight:                            # highlight the chosen row
             rect(slide, x, ry, w, row_h, fill=C("#E6F4F6"), line=ACCENT, lw=1.1)
         else:
             ln = rect(slide, x, ry + row_h, w, 0.012, fill=HAIRLINE)
@@ -202,7 +202,7 @@ def table(slide, x, y, w, headers, rows, col_w, head_h=0.46, row_h=0.52,
         for ci, (cwi, cell) in enumerate(zip(col_w, row)):
             val, col, bold = cell if isinstance(cell, tuple) else (cell, INK, False)
             text(slide, cx + 0.09, ry, cwi - 0.18, row_h, val, size=fs, color=col,
-                 bold=bold or ri == 0 and ci == 0, anchor=MSO_ANCHOR.MIDDLE,
+                 bold=bold or (ri == highlight and ci == 0), anchor=MSO_ANCHOR.MIDDLE,
                  align=PP_ALIGN.LEFT if ci == 0 else PP_ALIGN.CENTER)
             cx += cwi
         ry += row_h

@@ -178,7 +178,7 @@ def stat_strip(slide, x, y, w, items):
 
 
 def table(slide, x, y, w, headers, rows, col_w, head_h=0.46, row_h=0.52,
-          fs=11, hfs=10.5):
+          fs=11, hfs=10.5, highlight=0):
     """Hand-built table: rectangles + textboxes, so every colour is ours."""
     total = sum(col_w)
     col_w = [c / total * w for c in col_w]
@@ -193,7 +193,7 @@ def table(slide, x, y, w, headers, rows, col_w, head_h=0.46, row_h=0.52,
     # body
     ry = y + head_h
     for ri, row in enumerate(rows):
-        if ri == 0:                                    # highlight the chosen model
+        if ri == highlight:                            # highlight the chosen row
             rect(slide, x, ry, w, row_h, fill=C("#E6F4F6"), line=ACCENT, lw=1.1)
         else:
             ln = rect(slide, x, ry + row_h, w, 0.012, fill=HAIRLINE)
@@ -202,7 +202,7 @@ def table(slide, x, y, w, headers, rows, col_w, head_h=0.46, row_h=0.52,
         for ci, (cwi, cell) in enumerate(zip(col_w, row)):
             val, col, bold = cell if isinstance(cell, tuple) else (cell, INK, False)
             text(slide, cx + 0.09, ry, cwi - 0.18, row_h, val, size=fs, color=col,
-                 bold=bold or ri == 0 and ci == 0, anchor=MSO_ANCHOR.MIDDLE,
+                 bold=bold or (ri == highlight and ci == 0), anchor=MSO_ANCHOR.MIDDLE,
                  align=PP_ALIGN.LEFT if ci == 0 else PP_ALIGN.CENTER)
             cx += cwi
         ry += row_h
@@ -351,7 +351,7 @@ def references_slide(prs, n):
 
     ry3 = ry2 + 2.22
     mini_head(s, VIS_X, ry3, VIS_W, "STACK", MUTED)
-    text(s, VIS_X, ry3 + 0.26, VIS_W, 0.52, STACK, size=9, color=MUTED, line=1.32)
+    text(s, VIS_X, ry3 + 0.24, VIS_W, 0.48, STACK, size=8.8, color=MUTED, line=1.28)
 
     notes(s, """
 Five papers shaped the approach. The first four are the state-of-the-art we
@@ -371,22 +371,26 @@ def fault_flow_slide(prs, n):
     end to end, with the independent hardware-protection lane underneath."""
     s = new_slide(prs, n, "Fault detection, end to end")
     picture(s, os.path.join(GEN, "diag_fault_flow.png"), M, BODY_Y - 0.08,
-            SW - 2*M, 4.28)
+            SW - 2*M, 4.12)
     cards = [
         ("FIVE STAGES", "Acquire → establish context → detect → score risk → act. "
                         "Every block maps to a module in the repository.", ACCENT),
-        ("MODE FIRST", "Context is resolved before detection, because the same "
-                       "voltage sag means different things in ACCEL and IDLE.", WARNING),
+        ("MODE FIRST", "Context is resolved before detection: the same voltage sag "
+                       "means different things in ACCEL and IDLE.", WARNING),
         ("TWO PATHS", "The ML lane can abstain or be wrong. The hardware lane "
                       "cannot — it runs at the pack, with no software in it.", CRITICAL),
+        ("KNOWN BIAS", "Trained on one pack with one chronic defect (cell_v1), so "
+                       "generalisation is unproven. The datasheet configurator and "
+                       "in-browser retraining are the mitigation. Telemetry stays in "
+                       "the operator's own instance.", CRITICAL),
     ]
-    cw = (SW - 2*M - 2*0.24) / 3
+    cw = (SW - 2*M - 3*0.20) / 4
     for i, (t, d, col) in enumerate(cards):
-        cx = M + i * (cw + 0.24)
-        rect(s, cx, 5.82, cw, 1.10, fill=PANEL, line=HAIRLINE, lw=0.75)
-        b = rect(s, cx, 5.82, cw, 0.055, fill=col); b.line.fill.background()
-        text(s, cx + 0.20, 5.96, cw - 0.40, 0.22, t, size=9, color=col, bold=True)
-        text(s, cx + 0.20, 6.22, cw - 0.40, 0.64, d, size=9.5, color=INK, line=1.22)
+        cx = M + i * (cw + 0.20)
+        rect(s, cx, 5.68, cw, 1.25, fill=PANEL, line=HAIRLINE, lw=0.75)
+        b = rect(s, cx, 5.68, cw, 0.055, fill=col); b.line.fill.background()
+        text(s, cx + 0.16, 5.81, cw - 0.32, 0.22, t, size=8.5, color=col, bold=True)
+        text(s, cx + 0.16, 6.06, cw - 0.32, 0.84, d, size=8.4, color=INK, line=1.20)
     notes(s, """
 This is the whole fault path on one slide. Five stages. Acquisition: the BMS
 senses, BLE carries it at one hertz, and we reject any row that is NaN or all
@@ -401,7 +405,103 @@ instruction, logged alert, and comparison against the cycle history. And
 underneath all of it, the lane that does not depend on any of this — the JBD
 protection logic switching the MOSFETs at the pack, and the Arduino watchdog that
 resets the Pi. If every line of our software failed, that lane still opens the
-contactor.""")
+contactor. And the honest caveat, bottom right: this model has seen one physical
+pack with one chronic defect, so generalisation to other packs is unproven. The
+datasheet configurator and the in-browser retraining loop are how an operator
+adapts it to their own pack, and their telemetry stays in their own
+instance — we never pool it.""")
+    return s
+
+# ================================================ business & adoption slide
+def business_slide(prs, n):
+    """Cost, adoption path, who pays, and the one axis we win on.
+
+    Every rupee figure is a [FILL] placeholder — the team supplies real BOM
+    numbers. Competitor capabilities are marked for verification against
+    vendor datasheets rather than asserted.
+    """
+    s = new_slide(prs, n, "What it costs, who pays, and why they switch")
+
+    # ---- BOM of the build that exists today -------------------------------
+    mini_head(s, M, BODY_Y + 0.02, LEFT_W, "BOM — THE UNIT WE BUILT")
+    bom = [("Raspberry Pi 5 (8 GB) + cooler", "[FILL: ₹...]"),
+           ("Arduino Uno R4 WiFi watchdog", "[FILL: ₹...]"),
+           ("JBD SP24S007 BMS, 8S", "[FILL: ₹...]"),
+           ("16 × LG INR21700-M50 cells", "[FILL: ₹...]"),
+           ("Harness, NTCs, enclosure", "[FILL: ₹...]")]
+    y = BODY_Y + 0.32
+    for lab, val in bom:
+        text(s, M + 0.04, y, LEFT_W - 1.70, 0.24, lab, size=11, color=INK)
+        text(s, M + LEFT_W - 1.66, y, 1.62, 0.24, val, size=11, color=WARNING,
+             bold=True, align=PP_ALIGN.RIGHT)
+        ln = rect(s, M, y + 0.26, LEFT_W, 0.008, fill=HAIRLINE)
+        ln.line.fill.background()
+        y += 0.34
+    rect(s, M, y + 0.02, LEFT_W, 0.40, fill=PANEL, line=HAIRLINE, lw=0.75)
+    text(s, M + 0.04, y + 0.09, LEFT_W - 1.70, 0.26, "Total, one retrofit unit",
+         size=11, color=INK, bold=True)
+    text(s, M + LEFT_W - 1.66, y + 0.09, 1.62, 0.26, "[FILL: ₹...]", size=11,
+         color=CRITICAL, bold=True, align=PP_ALIGN.RIGHT)
+
+    # ---- two routes to market --------------------------------------------
+    mini_head(s, M, 4.34, LEFT_W, "TWO ROUTES IN")
+    pw = (LEFT_W - 0.20) / 2
+    for i, (t_, d_, col) in enumerate([
+        ("RETROFIT", "Pi 5 alongside the BMS already in the pack.\nNo redesign, no recertification.", ACCENT),
+        ("OEM INTEGRATION", "Zynq-7000 on the BMS board itself.\nPer-unit cost falls at volume.", WARNING)]):
+        px = M + i * (pw + 0.20)
+        rect(s, px, 4.62, pw, 1.02, fill=BG, line=col, lw=1.2)
+        text(s, px + 0.16, 4.72, pw - 0.32, 0.24, t_, size=9.5, color=col, bold=True)
+        text(s, px + 0.16, 4.98, pw - 0.32, 0.60, d_, size=9.5, color=INK, line=1.22)
+
+    mini_head(s, M, 5.82, LEFT_W, "WHO PAYS", CRITICAL)
+    text(s, M, 6.10, LEFT_W, 0.62,
+         "Fleet operator — avoids an early pack replacement  [FILL: ₹ per pack]\n"
+         "OEM — fewer warranty claims per 1,000 packs  [FILL: ₹ or % exposure]",
+         size=10.5, color=INK, line=1.40)
+
+    # ---- the one axis we win on ------------------------------------------
+    mini_head(s, VIS_X, BODY_Y + 0.02, VIS_W, "WHERE WE ARE DIFFERENT")
+    headers = ["", "Per-cell\nsensing", "Learned\nfault classes", "Abstains\nwhen unsure",
+               "Datasheet\nreconfig"]
+    rows = [
+        ["Orion BMS",     ("✓", MUTED, False), ("—", MUTED, False), ("—", MUTED, False), ("✓", MUTED, False)],
+        ["Nuvation BMS",  ("✓", MUTED, False), ("—", MUTED, False), ("—", MUTED, False), ("✓", MUTED, False)],
+        ["JBD-class BMS", ("✓", MUTED, False), ("—", MUTED, False), ("—", MUTED, False), ("—", MUTED, False)],
+        ["AI-PBMS",       ("✓", ACCENT, True), ("6 classes", ACCENT, True),
+                          ("3 bands", ACCENT, True), ("PDF → profile", ACCENT, True)],
+    ]
+    end_y = table(s, VIS_X, BODY_Y + 0.32, VIS_W, headers, rows,
+                  col_w=[1.55, 0.95, 1.15, 1.10, 1.20],
+                  head_h=0.62, row_h=0.50, fs=9.5, hfs=8, highlight=3)
+    text(s, VIS_X, end_y + 0.14, VIS_W, 0.44,
+         "Competitor rows compiled from public product pages — "
+         "[VERIFY against vendor datasheets]",
+         size=8.5, color=CRITICAL, line=1.24)
+
+    rect(s, VIS_X, 4.62, VIS_W, 2.10, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, VIS_X + 0.22, 4.74, VIS_W - 0.44, "THE ARGUMENT IN ONE LINE")
+    text(s, VIS_X + 0.22, 5.02, VIS_W - 0.44, 1.58,
+         "Every product in that table protects the pack once a threshold breaks. "
+         "None of them tells a technician which cell is failing, how confident "
+         "that call is, or adapts to a different chemistry from a PDF. That is "
+         "the whole product.",
+         size=11.5, color=INK, line=1.28)
+
+    notes(s, """
+Cost first. The unit we built is a Raspberry Pi, an Arduino, a JBD BMS and the
+cells — a retrofit box that sits alongside a pack already in service, with no
+redesign and no recertification. At volume the same logic moves onto a Zynq on
+the BMS board itself and the per-unit cost drops. Who pays: the fleet operator,
+because catching one weak cell early avoids replacing an otherwise healthy pack;
+and the OEM, because the same signal cuts warranty claims. Now the table on the
+right, and I want to be precise about this. Orion, Nuvation and the JBD-class
+boards all do per-cell sensing — we are not claiming otherwise. What none of
+them does is classify what kind of fault it is, tell you how confident it is, or
+let you point it at a different chemistry by uploading a datasheet. They protect
+the pack after a threshold breaks. We tell a technician which cell, what is wrong
+with it, and how sure we are — and we abstain when we are not sure. That is the
+axis we compete on.""")
     return s
 
 def build():
@@ -411,35 +511,73 @@ def build():
     E = lambda n: os.path.join(EXT, n)
 
     # =============================================================== 1
-    s = new_slide(prs, 1, "We could not buy this dataset, so we built it",
+    s = new_slide(prs, 1, "One weak cell is invisible to a pack-level BMS",
                   eyebrow="AI-PBMS — AI-Powered Predictive Battery Management System  ·  "
                           "Team ANS_4X  ·  PSG iTech")
-    bullets(s, M, BODY_Y + 0.26, LEFT_W, 2.35, [
-        "Public BMS datasets hide per-cell voltages behind pack totals.",
-        "Imbalance and weak-cell faults are invisible at pack level.",
-        "So we instrumented a physical 8S2P NMC pack end to end.",
-        "Programmable supply charges; electronic load drives discharge.",
-    ], size=15)
-    stat_strip(s, M, 4.28, LEFT_W, [
-        ("~50", "cycles", ACCENT), ("~3 hrs", "each", ACCENT),
-        (">100 hrs", "logged", ACCENT), ("~155,000", "rows", CRITICAL),
-    ])
-    rect(s, M, 5.34, LEFT_W, 1.30, fill=PANEL, line=HAIRLINE, lw=0.75)
-    mini_head(s, M + 0.22, 5.46, LEFT_W - 0.44, "WHAT THE DATA SHOWED", CRITICAL)
-    text(s, M + 0.22, 5.74, LEFT_W - 0.44, 0.80,
-         "Cell 1 runs 289 mV below its neighbours in every cycle. A pack-level "
-         "voltmeter reads 30.5 V and calls this healthy.",
-         size=12, color=INK, line=1.26)
-    picture(s, E("p03_img1_x38.jpeg"), VIS_X, BODY_Y + 0.14, VIS_W, 1.78, card=True)
-    picture(s, G("fig_cell_traces.png"), VIS_X, BODY_Y + 2.06, VIS_W, 3.10)
+
+    # ---- the problem, stated before our engineering story ----------------
+    rect(s, M, BODY_Y + 0.06, SW - 2*M, 1.20, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, M + 0.22, BODY_Y + 0.16, 4.0, "THE PROBLEM", CRITICAL)
+    text(s, M + 0.22, BODY_Y + 0.42, 6.05, 0.76,
+         "A pack BMS reports one voltage for the whole string. A single "
+         "degrading cell stays hidden until it forces a shutdown — or an "
+         "early pack replacement.",
+         size=11.5, color=INK, line=1.24)
+    pc = [("30–40%", "of EV cost is the battery pack", "[VERIFY — source?]", CRITICAL),
+          ("1 of 16", "a weak cell caps the whole string", "derived from our 8S2P", ACCENT),
+          ("[FILL]", "India EV registrations, latest FY", "[VERIFY — source?]", CRITICAL)]
+    cwid = 1.78
+    cx0 = SW - M - (3 * cwid + 2 * 0.16) - 0.20
+    for i, (big, cap, tag, col) in enumerate(pc):
+        cx = cx0 + i * (cwid + 0.16)
+        rect(s, cx, BODY_Y + 0.20, cwid, 0.94, fill=BG, line=col, lw=1.1)
+        text(s, cx, BODY_Y + 0.26, cwid, 0.30, big, size=15, color=col, bold=True,
+             align=PP_ALIGN.CENTER)
+        text(s, cx + 0.08, BODY_Y + 0.59, cwid - 0.16, 0.28, cap, size=7.6,
+             color=MUTED, align=PP_ALIGN.CENTER, line=1.18)
+        text(s, cx + 0.08, BODY_Y + 0.88, cwid - 0.16, 0.20, tag, size=6.8,
+             color=col if "VERIFY" in tag else MUTED, align=PP_ALIGN.CENTER)
+
+    # ---- who actually operates this ---------------------------------------
+    mini_head(s, M, 2.96, LEFT_W, "WHO OPERATES THIS, AND WHAT THEY HAVE TODAY")
+    bullets(s, M, 3.26, LEFT_W, 1.70, [
+        "[EVIDENCE: operator role — fleet technician? depot? OEM service?]",
+        "Today they see pack voltage, current, and a fault LED.",
+        "They cannot see which cell, how degraded, or how soon.",
+    ], size=13, gap=6)
+    rect(s, M, 4.72, LEFT_W, 1.56, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, M + 0.22, 4.84, LEFT_W - 0.44, "FIELD EVIDENCE TO INSERT", WARNING)
+    text(s, M + 0.22, 5.12, LEFT_W - 0.44, 1.04,
+         "[EVIDENCE: fleet operator interview — what they said]\n"
+         "[EVIDENCE: time or cost to diagnose one pack today]",
+         size=11.5, color=INK, line=1.42)
+
+    # ---- the dataset story, kept but subordinated -------------------------
+    picture(s, G("fig_cell_traces.png"), VIS_X, 2.90, VIS_W, 2.48)
+    caption(s, VIS_X, 5.46, VIS_W,
+            "289 mV below its neighbours, every cycle — invisible at pack level")
+    mini_head(s, VIS_X, 5.78, VIS_W, "SO WE BUILT THE DATASET OURSELVES")
+    ds = [("~50", "cycles"), ("~3 hrs", "each"), (">100 hrs", "logged"),
+          ("~155,000", "rows")]
+    dw = (VIS_W - 3 * 0.10) / 4
+    for i, (big, cap) in enumerate(ds):
+        dx = VIS_X + i * (dw + 0.10)
+        rect(s, dx, 6.06, dw, 0.58, fill=PANEL, line=HAIRLINE, lw=0.7)
+        text(s, dx, 6.10, dw, 0.26, big, size=11.5,
+             color=CRITICAL if i == 3 else ACCENT, bold=True, align=PP_ALIGN.CENTER)
+        text(s, dx, 6.38, dw, 0.22, cap, size=7.6, color=MUTED, align=PP_ALIGN.CENTER)
     notes(s, """
-Every public battery dataset reports pack-level voltage and current, which is
-useless to us: imbalance and weak-cell faults only show in the spread between
-individual cells. So we built the dataset — an 8S2P NMC pack, a JBD BMS on all
-eight taps, roughly fifty cycles and 155,000 rows. The chart bottom right is
-what a hundred hours bought us: seven cells tracking together, and cell one
-sitting 289 millivolts below them for the entire discharge. That one defect
-shaped everything that follows.""")
+Start with the problem, not with us. A battery management system reports one
+voltage for the whole string. That is the number a technician sees, and it looks
+fine right up until a cell takes the pack down. The battery is thirty to forty
+percent of what the vehicle costs, and in a series string one weak cell caps all
+sixteen — so a single failing cell can retire an otherwise healthy pack. Today
+the operator gets pack voltage, current and a fault light. They cannot tell you
+which cell, how far gone it is, or how long they have. We could not buy data at
+that resolution, so we built it: fifty cycles, a hundred hours, a hundred and
+fifty-five thousand rows off a physical 8S2P pack. And the first thing it showed
+us is on the right — cell one, two hundred and eighty-nine millivolts below its
+neighbours, every single cycle, completely invisible to the pack-level reading.""")
 
     # =============================================================== 2
     s = new_slide(prs, 2, "The pack, and the model of the pack")
@@ -677,8 +815,11 @@ imbalance recall, OOD recall, the Zynq path, a real LFP bench, and state of
 health. Thank you — happy to take questions.""")
 
     # ============================================================== 10
-    references_slide(prs, 10)
+    business_slide(prs, 10)
+
+    # ============================================================== 11
+    references_slide(prs, 11)
 
     prs.save(OUT)
-    print("wrote", os.path.relpath(OUT, ROOT), "| 10 slides")
+    print("wrote", os.path.relpath(OUT, ROOT), "| 11 slides")
     return OUT
