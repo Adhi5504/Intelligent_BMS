@@ -403,9 +403,10 @@ is multiplied by a physical severity derived from how far past the datasheet
 warning limit we are, raised further if the fault persists. Action: corrective
 instruction, logged alert, and comparison against the cycle history. And
 underneath all of it, the lane that does not depend on any of this — the JBD
-protection logic switching the MOSFETs at the pack, and the Arduino watchdog that
-resets the Pi. If every line of our software failed, that lane still opens the
-contactor. And the honest caveat, bottom right: this model has seen one physical
+protection logic switching the MOSFETs at the pack. If every line of our
+software failed, that lane still opens the
+contactor. That lane is the BMS's own protection logic, not something we wrote.
+And the honest caveat, bottom right: this model has seen one physical
 pack with one chronic defect, so generalisation to other packs is unproven. The
 datasheet configurator and the in-browser retraining loop are how an operator
 adapts it to their own pack, and their telemetry stays in their own
@@ -424,41 +425,33 @@ def business_slide(prs, n):
 
     # ---- BOM of the build that exists today -------------------------------
     mini_head(s, M, BODY_Y + 0.02, LEFT_W, "BOM — THE UNIT WE BUILT")
-    bom = [("Raspberry Pi 5 (8 GB) + cooler", "[FILL: ₹...]"),
-           ("Arduino Uno R4 WiFi watchdog", "[FILL: ₹...]"),
-           ("JBD SP24S007 BMS, 8S", "[FILL: ₹...]"),
-           ("16 × LG INR21700-M50 cells", "[FILL: ₹...]"),
-           ("Harness, NTCs, enclosure", "[FILL: ₹...]")]
-    y = BODY_Y + 0.32
+    bom = [("Raspberry Pi 5 (8 GB) + cooler + PSU", "₹15,000"),
+           ("8S2P NMC pack + JBD 8S BMS (NTCs included)", "₹13,000"),
+           ("Harness, enclosure", "[FILL: ₹...]")]
+    y = BODY_Y + 0.34
     for lab, val in bom:
-        text(s, M + 0.04, y, LEFT_W - 1.70, 0.24, lab, size=11, color=INK)
-        text(s, M + LEFT_W - 1.66, y, 1.62, 0.24, val, size=11, color=WARNING,
+        text(s, M + 0.04, y, LEFT_W - 1.70, 0.26, lab, size=11.5, color=INK)
+        text(s, M + LEFT_W - 1.66, y, 1.62, 0.26, val, size=11.5, color=WARNING,
              bold=True, align=PP_ALIGN.RIGHT)
-        ln = rect(s, M, y + 0.26, LEFT_W, 0.008, fill=HAIRLINE)
+        ln = rect(s, M, y + 0.29, LEFT_W, 0.008, fill=HAIRLINE)
         ln.line.fill.background()
-        y += 0.34
-    rect(s, M, y + 0.02, LEFT_W, 0.40, fill=PANEL, line=HAIRLINE, lw=0.75)
-    text(s, M + 0.04, y + 0.09, LEFT_W - 1.70, 0.26, "Total, one retrofit unit",
-         size=11, color=INK, bold=True)
-    text(s, M + LEFT_W - 1.66, y + 0.09, 1.62, 0.26, "[FILL: ₹...]", size=11,
+        y += 0.42
+    rect(s, M, y + 0.06, LEFT_W, 0.48, fill=PANEL, line=HAIRLINE, lw=0.75)
+    text(s, M + 0.04, y + 0.17, LEFT_W - 1.70, 0.26, "Total, one retrofit unit",
+         size=11.5, color=INK, bold=True)
+    text(s, M + LEFT_W - 1.66, y + 0.17, 1.62, 0.26, "[FILL: ₹...]", size=11.5,
          color=CRITICAL, bold=True, align=PP_ALIGN.RIGHT)
 
     # ---- two routes to market --------------------------------------------
-    mini_head(s, M, 4.34, LEFT_W, "TWO ROUTES IN")
+    mini_head(s, M, 3.94, LEFT_W, "TWO ROUTES IN")
     pw = (LEFT_W - 0.20) / 2
     for i, (t_, d_, col) in enumerate([
         ("RETROFIT", "Pi 5 alongside the BMS already in the pack.\nNo redesign, no recertification.", ACCENT),
         ("OEM INTEGRATION", "Zynq-7000 on the BMS board itself.\nPer-unit cost falls at volume.", WARNING)]):
         px = M + i * (pw + 0.20)
-        rect(s, px, 4.62, pw, 1.02, fill=BG, line=col, lw=1.2)
-        text(s, px + 0.16, 4.72, pw - 0.32, 0.24, t_, size=9.5, color=col, bold=True)
-        text(s, px + 0.16, 4.98, pw - 0.32, 0.60, d_, size=9.5, color=INK, line=1.22)
-
-    mini_head(s, M, 5.82, LEFT_W, "WHO PAYS", CRITICAL)
-    text(s, M, 6.10, LEFT_W, 0.62,
-         "Fleet operator — avoids an early pack replacement  [FILL: ₹ per pack]\n"
-         "OEM — fewer warranty claims per 1,000 packs  [FILL: ₹ or % exposure]",
-         size=10.5, color=INK, line=1.40)
+        rect(s, px, 4.24, pw, 1.46, fill=BG, line=col, lw=1.2)
+        text(s, px + 0.16, 4.40, pw - 0.32, 0.24, t_, size=9.5, color=col, bold=True)
+        text(s, px + 0.16, 4.68, pw - 0.32, 0.88, d_, size=9.5, color=INK, line=1.26)
 
     # ---- the one axis we win on ------------------------------------------
     mini_head(s, VIS_X, BODY_Y + 0.02, VIS_W, "WHERE WE ARE DIFFERENT")
@@ -471,26 +464,32 @@ def business_slide(prs, n):
         ["AI-PBMS",       ("✓", ACCENT, True), ("6 classes", ACCENT, True),
                           ("3 bands", ACCENT, True), ("PDF → profile", ACCENT, True)],
     ]
-    end_y = table(s, VIS_X, BODY_Y + 0.32, VIS_W, headers, rows,
+    end_y = table(s, VIS_X, BODY_Y + 0.30, VIS_W, headers, rows,
                   col_w=[1.55, 0.95, 1.15, 1.10, 1.20],
-                  head_h=0.62, row_h=0.50, fs=9.5, hfs=8, highlight=3)
-    text(s, VIS_X, end_y + 0.14, VIS_W, 0.44,
+                  head_h=0.56, row_h=0.46, fs=9.5, hfs=8, highlight=3)
+    text(s, VIS_X, end_y + 0.10, VIS_W, 0.40,
          "Competitor rows compiled from public product pages — "
          "[VERIFY against vendor datasheets]",
-         size=8.5, color=CRITICAL, line=1.24)
+         size=8.2, color=CRITICAL, line=1.22)
 
-    rect(s, VIS_X, 4.62, VIS_W, 2.10, fill=PANEL, line=HAIRLINE, lw=0.75)
-    mini_head(s, VIS_X + 0.22, 4.74, VIS_W - 0.44, "THE ARGUMENT IN ONE LINE")
-    text(s, VIS_X + 0.22, 5.02, VIS_W - 0.44, 1.58,
-         "Every product in that table protects the pack once a threshold breaks. "
-         "None of them tells a technician which cell is failing, how confident "
-         "that call is, or adapts to a different chemistry from a PDF. That is "
-         "the whole product.",
-         size=11.5, color=INK, line=1.28)
+    rect(s, VIS_X, 4.80, VIS_W, 1.10, fill=PANEL, line=HAIRLINE, lw=0.75)
+    mini_head(s, VIS_X + 0.22, 4.90, VIS_W - 0.44, "THE ARGUMENT IN ONE LINE")
+    text(s, VIS_X + 0.22, 5.14, VIS_W - 0.44, 0.70,
+         "Every product there protects the pack once a threshold breaks. None "
+         "tells a technician which cell is failing, how confident that call is, "
+         "or adapts to a new chemistry from a PDF.",
+         size=11, color=INK, line=1.26)
+    mini_head(s, VIS_X, 6.04, VIS_W, "WHO PAYS", CRITICAL)
+    text(s, VIS_X, 6.30, VIS_W, 0.56,
+         "Fleet operator — avoids an early pack replacement  [FILL: ₹ per pack]\n"
+         "OEM — fewer warranty claims per 1,000 packs  [FILL: ₹ or % exposure]",
+         size=10.5, color=INK, line=1.40)
 
     notes(s, """
-Cost first. The unit we built is a Raspberry Pi, an Arduino, a JBD BMS and the
-cells — a retrofit box that sits alongside a pack already in service, with no
+Cost first. The unit we built is a Raspberry Pi 5 with its cooler and supply at
+fifteen thousand rupees, and the 8S2P pack with its JBD BMS — bought together at
+thirteen thousand, thermistors included. Add the harness and enclosure and that
+is the whole retrofit box: it sits alongside a pack already in service, with no
 redesign and no recertification. At volume the same logic moves onto a Zynq on
 the BMS board itself and the per-unit cost drops. Who pays: the fleet operator,
 because catching one weak cell early avoids replacing an otherwise healthy pack;
@@ -702,12 +701,10 @@ positives, catching one unknown in four. Tuned that way deliberately.""")
     fault_flow_slide(prs, 6)
 
     # =============================================================== 7
-    s = new_slide(prs, 7, "Three tiers at the edge, three surfaces in the browser")
+    s = new_slide(prs, 7, "Two tiers at the edge, three surfaces in the browser")
     two_col_bullets(s, M, BODY_Y + 0.08, LEFT_W, 2.10, [
         "JBD BMS senses eight taps and four NTCs.",
         "Pi 5 runs the logger and XGBoost inference.",
-        "Arduino R4 watches the Pi's heartbeat.",
-        "Missed beat pulls RUN pin, resets the Pi.",
         "Inference stays local: no link, no safety gap.",
         "Pi dials out to Railway — no inbound port.",
     ], size=13.5)
@@ -718,21 +715,22 @@ positives, catching one unknown in four. Tuned that way deliberately.""")
          "freeing the CPU for the logger and the BLE link.",
          size=11.5, color=INK, line=1.24)
     hy = 5.26
-    picture(s, E("p06_img1_x51.jpeg"), M, hy, LEFT_W/2 - 0.12, 1.10, card=True)
-    picture(s, E("p06_img2_x52.jpeg"), M + LEFT_W/2 + 0.12, hy, LEFT_W/2 - 0.12, 1.10, card=True)
-    caption(s, M, hy + 1.13, LEFT_W/2 - 0.12, "Raspberry Pi 5")
-    caption(s, M + LEFT_W/2 + 0.12, hy + 1.13, LEFT_W/2 - 0.12, "Arduino Uno R4 WiFi")
+    picture(s, E("p06_img1_x51.jpeg"), M + LEFT_W/2 - 1.35, hy, 2.70, 1.10, card=True)
+    caption(s, M + LEFT_W/2 - 1.35, hy + 1.13, 2.70, "Raspberry Pi 5")
     picture(s, G("diag_hardware.png"), VIS_X, BODY_Y + 0.06, VIS_W, 2.45)
     picture(s, G("diag_system_flow.png"), VIS_X, BODY_Y + 2.62, VIS_W, 2.55)
     notes(s, """
-Three tiers, each doing what the others cannot. The BMS senses, the Pi 5 runs
-the logger and the inference, and an Arduino on its own power
-rail watches for a heartbeat — if it stops, it pulls the Pi's RUN pin and forces
-a reset. Inference sits at the edge deliberately: push it to a server and every
-network hiccup becomes an unmonitored window. The lower diagram is the whole
-data path. Inference happens on the Pi; the dashboard is a Flask service
-deployed on Railway, and the Pi pushes results up to it. Because the Pi only ever
-dials out, we never open an inbound port on the pack itself.""")
+Two tiers at the edge, and I want to be precise about what exists. The JBD BMS
+is the sensing layer — eight cell taps, four thermistors, pack voltage and
+current. The Raspberry Pi 5 is the inference layer: it runs the logger, the
+feature engineering and the classifier. That is what is built and that is what
+you will see in the demo. Inference sits on the Pi deliberately — push it to a
+server and every network hiccup becomes a window where the pack is unmonitored.
+A third tier, an independent hardware watchdog on its own power rail, is
+specified and on our roadmap, but we have not built it, so it is not in this
+architecture. The lower diagram is the whole data path: the Pi pushes results up
+to a Flask dashboard on Railway, and because the Pi only ever dials out we never
+open an inbound port on the pack.""")
 
     # =============================================================== 7
     s = new_slide(prs, 8, "The platform an operator actually uses")
@@ -789,17 +787,18 @@ any absolute threshold is breached.""")
          "Upload field telemetry from the new pack and retrain XGBoost from the "
          "dashboard — the adaptation loop closes without a developer.",
          size=11.5, color=INK, line=1.24)
-    mini_head(s, M, 5.08, LEFT_W, "WHAT WE WOULD BUILD NEXT", MUTED)
+    mini_head(s, M, 4.98, LEFT_W, "WHAT WE WOULD BUILD NEXT", MUTED)
     nxt = [("Close the Cell Imbalance gap", CRITICAL),
            ("Lift OOD recall above 24.5%", WARNING),
+           ("Independent hardware watchdog on a separate rail", WARNING),
            ("Move inference onto the Zynq-7000", ACCENT),
            ("Characterise LFP on a real bench", ACCENT),
            ("SOH and remaining useful life from dV/dt", ACCENT)]
-    ny = 5.38
+    ny = 5.26
     for t, col in nxt:
-        b = rect(s, M, ny, 0.06, 0.22, fill=col); b.line.fill.background()
-        text(s, M + 0.22, ny - 0.02, LEFT_W - 0.22, 0.26, t, size=11.5, color=INK)
-        ny += 0.27
+        b = rect(s, M, ny, 0.06, 0.20, fill=col); b.line.fill.background()
+        text(s, M + 0.22, ny - 0.03, LEFT_W - 0.22, 0.26, t, size=11.5, color=INK)
+        ny += 0.25
     picture(s, G("diag_configurator.png"), VIS_X, BODY_Y + 0.04, 2.34, 4.34)
     picture(s, G("fig_ocv_soc.png"), VIS_X + 2.52, BODY_Y + 0.42, VIS_W - 2.52, 3.15)
     caption(s, VIS_X + 2.52, BODY_Y + 3.66, VIS_W - 2.52,
@@ -810,9 +809,11 @@ the parser pulls chemistry and every limit, pack sizing derives the series and
 parallel counts, and the chemistry gets tiered: NMC is direct reuse, NCA and LCO
 share the ceiling so they only shift, LFP needs a genuine remap to 2.50 to 3.65
 volts because of that flat OCV curve, and LTO needs everything rescaled. And you
-can retrain on your own field telemetry from the browser. What is not finished:
-imbalance recall, OOD recall, the Zynq path, a real LFP bench, and state of
-health. Thank you — happy to take questions.""")
+can retrain on your own field telemetry from the browser. What is not finished,
+and I want to be straight about it: imbalance recall, unknown-fault recall, the
+independent hardware watchdog on its own rail — designed and specified but not
+yet built — the Zynq path, a real LFP bench, and state of health. Thank you,
+happy to take questions.""")
 
     # ============================================================== 10
     business_slide(prs, 10)

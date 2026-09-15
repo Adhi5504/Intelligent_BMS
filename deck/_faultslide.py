@@ -38,9 +38,10 @@ is multiplied by a physical severity derived from how far past the datasheet
 warning limit we are, raised further if the fault persists. Action: corrective
 instruction, logged alert, and comparison against the cycle history. And
 underneath all of it, the lane that does not depend on any of this — the JBD
-protection logic switching the MOSFETs at the pack, and the Arduino watchdog that
-resets the Pi. If every line of our software failed, that lane still opens the
-contactor. And the honest caveat, bottom right: this model has seen one physical
+protection logic switching the MOSFETs at the pack. If every line of our
+software failed, that lane still opens the
+contactor. That lane is the BMS's own protection logic, not something we wrote.
+And the honest caveat, bottom right: this model has seen one physical
 pack with one chronic defect, so generalisation to other packs is unproven. The
 datasheet configurator and the in-browser retraining loop are how an operator
 adapts it to their own pack, and their telemetry stays in their own

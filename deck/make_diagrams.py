@@ -208,54 +208,47 @@ def ecm_2rc():
 
 # ================================================== 3. hardware block diagram
 def hardware_blocks():
-    fig, ax = canvas(9.6, 5.2, (0, 19.2), (0, 10.4))
-    bw, bh, by = 4.55, 2.70, 5.15
+    """Two tiers as built: JBD BMS sensing -> Pi 5 edge inference.
 
-    box(ax, 0.75, by, bw, bh, "JBD BMS",
-        "SP24S007 · 8 cell taps\n4 × NTC · pack V / I", ec=ACCENT, fc=BG)
-    box(ax, 7.32, by, bw, bh, "Raspberry Pi 5",
-        "jbd_logger v9 · 51 features\nXGBoost inference · OOD gate", ec=ACCENT, fc=ACCENT_TINT)
-    box(ax, 13.90, by, bw, bh, "Arduino Uno R4 WiFi",
-        "hardware watchdog\nindependent power rail", ec=WARNING, fc=WARNING_TINT)
+    The independent hardware watchdog is specified but not built, so it is
+    not drawn here -- it appears only on the roadmap.
+    """
+    fig, ax = canvas(9.6, 4.6, (0, 19.2), (0, 9.2))
+    bw, bh, by = 6.60, 3.00, 4.30
+
+    box(ax, 1.35, by, bw, bh, "JBD BMS",
+        "SP24S007 · 8 cell taps\n4 × NTC · pack V / I", ec=ACCENT, fc=BG, fs=12.5)
+    box(ax, 11.25, by, bw, bh, "Raspberry Pi 5",
+        "jbd_logger v9 · 51 features\nXGBoost inference · OOD gate",
+        ec=ACCENT, fc=ACCENT_TINT, fs=12.5)
 
     # BLE link
-    arrow(ax, (0.75 + bw, by + bh*0.58), (7.32, by + bh*0.58), color=ACCENT, lw=2.0)
-    ax.text(0.75 + bw + (7.32 - 0.75 - bw)/2, by + bh*0.58 + 0.40, "BLE",
-            ha="center", va="bottom", fontsize=11, fontweight="bold", color=ACCENT)
-    ax.text(0.75 + bw + (7.32 - 0.75 - bw)/2, by + bh*0.58 - 0.42,
-            "bleak · notify", ha="center", va="top", fontsize=8.6, color=MUTED)
-    # little BLE radio glyph
-    gx, gy = 0.75 + bw + (7.32 - 0.75 - bw)/2, by + bh*0.58 + 1.18
-    for r, a in [(0.22, 1.0), (0.42, 0.6), (0.62, 0.32)]:
+    arrow(ax, (1.35 + bw, by + bh*0.52), (11.25, by + bh*0.52), color=ACCENT, lw=2.2)
+    mid = 1.35 + bw + (11.25 - 1.35 - bw)/2
+    ax.text(mid, by + bh*0.52 + 0.42, "BLE", ha="center", va="bottom",
+            fontsize=12, fontweight="bold", color=ACCENT)
+    ax.text(mid, by + bh*0.52 - 0.44, "bleak · notify", ha="center", va="top",
+            fontsize=9.2, color=MUTED)
+    gx, gy = mid, by + bh*0.52 + 1.30
+    for r, a in [(0.24, 1.0), (0.46, 0.6), (0.68, 0.32)]:
         th = np.linspace(-0.85, 0.85, 40)
-        ax.plot(gx + r*np.cos(th), gy + r*np.sin(th), color=ACCENT, lw=1.5, alpha=a)
+        ax.plot(gx + r*np.cos(th), gy + r*np.sin(th), color=ACCENT, lw=1.6, alpha=a)
 
-    # heartbeat out
-    arrow(ax, (7.32 + bw, by + bh*0.66), (13.90, by + bh*0.66), color=WARNING, lw=2.0)
-    ax.text(7.32 + bw + (13.90 - 7.32 - bw)/2, by + bh*0.66 + 0.38, "heartbeat",
-            ha="center", va="bottom", fontsize=10.5, fontweight="bold", color=WARNING)
-    # RUN-pin reset back
-    arrow(ax, (13.90 + bw/2, by), (7.32 + bw/2, by), color=CRITICAL, lw=2.0, rad=-0.30)
-    ax.text(10.9, 3.42, "RUN pin  →  forced hardware reset on missed heartbeat",
-            ha="center", va="center", fontsize=10.5, fontweight="bold", color=CRITICAL)
-
-    # tier captions
-    for cx, t, col in [(0.75 + bw/2, "TIER 1 · sensing", ACCENT),
-                       (7.32 + bw/2, "TIER 2 · edge inference", ACCENT),
-                       (13.90 + bw/2, "TIER 3 · failsafe", WARNING)]:
-        ax.text(cx, by + bh + 0.42, t, ha="center", va="bottom",
-                fontsize=9.5, fontweight="bold", color=col)
+    for cx, t in [(1.35 + bw/2, "TIER 1 · sensing"),
+                  (11.25 + bw/2, "TIER 2 · edge inference")]:
+        ax.text(cx, by + bh + 0.46, t, ha="center", va="bottom",
+                fontsize=10.5, fontweight="bold", color=ACCENT)
 
     # acceleration path
-    ax.add_patch(FancyBboxPatch((4.60, 1.00), 10.0, 1.65,
+    ax.add_patch(FancyBboxPatch((3.20, 1.70), 12.8, 1.85,
                  boxstyle="round,pad=0,rounding_size=0.14", facecolor=PANEL,
                  edgecolor=HAIRLINE, linewidth=1.1, linestyle=(0, (4, 3)), zorder=2))
-    ax.text(9.60, 1.82, "Acceleration path  ·  Zynq-7000 SoC",
-            ha="center", va="center", fontsize=10.8, fontweight="bold", color=INK)
-    ax.text(9.60, 1.30, "PL-side tree traversal for the same XGBoost model — "
+    ax.text(9.60, 2.72, "Acceleration path  ·  Zynq-7000 SoC",
+            ha="center", va="center", fontsize=11.5, fontweight="bold", color=INK)
+    ax.text(9.60, 2.14, "PL-side tree traversal for the same XGBoost model — "
                         "inference off the CPU",
-            ha="center", va="center", fontsize=8.8, color=MUTED)
-    ax.text(9.60, 9.85, "Three-tier hardware architecture", ha="center",
+            ha="center", va="center", fontsize=9.2, color=MUTED)
+    ax.text(9.60, 8.70, "Two-tier hardware architecture, as built", ha="center",
             va="center", fontsize=14, fontweight="bold", color=INK)
     save(fig, "diag_hardware.png")
 

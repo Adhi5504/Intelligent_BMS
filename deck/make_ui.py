@@ -188,7 +188,6 @@ def system_flow():
         # (lane_x, y, w, h, title, sub, edge colour, fill)
         (0.35, 4.40, 6.05, 2.05, "8S2P pack + JBD BMS", "8 cell taps · 4 NTC · pack V/I", ACCENT, BG),
         (0.35, 1.95, 6.05, 2.05, "Raspberry Pi 5", "jbd_logger v9 · 51 features\nXGBoost inference · OOD gate", ACCENT, ACCENT_TINT),
-        (0.35, 0.30, 6.05, 1.25, "Arduino Uno R4", "RUN-pin watchdog", WARNING, WARNING_TINT),
         (6.70, 4.40, 6.05, 2.05, "Flask dashboard", "on Railway · REST + SSE\nrisk scoring · cycle engine", ACCENT, BG),
         (6.70, 1.95, 6.05, 2.05, "PostgreSQL", "telemetry · cycle history\nactive_profile sync", ACCENT, BG),
         (6.70, 0.30, 6.05, 1.25, "Outbound only", "the Pi dials out — no inbound port", MUTED, PANEL),

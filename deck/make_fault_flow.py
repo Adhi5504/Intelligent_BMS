@@ -195,18 +195,17 @@ def build():
     ax.add_patch(FancyBboxPatch((0.55, 0.45), W - 1.1, 5.35,
                  boxstyle="round,pad=0,rounding_size=0.26", facecolor=PANEL,
                  edgecolor=CRITICAL, linewidth=1.5, linestyle=(0, (6, 3)), zorder=1))
-    ax.text(1.15, 5.10, "FAST HARDWARE PROTECTION — independent of everything above, "
-            "runs even if the Pi is down",
+    ax.text(1.15, 5.10, "FAST HARDWARE PROTECTION — in the BMS itself, "
+            "independent of everything above",
             ha="left", va="center", fontsize=9, fontweight="bold", color=CRITICAL)
     hb = [("JBD protection logic", "over-/under-voltage · over-current\nover-temp · short circuit"),
           ("MOSFET gate control", "charge and discharge FETs\nswitched at the pack"),
-          ("Immediate disconnect", "load isolated in hardware,\nno software in the path"),
-          ("Arduino Uno R4 watchdog", "serial heartbeat from the Pi,\nmissed beat → RUN-pin reset")]
-    bwid = (W - 3.4 - 3 * 0.85) / 4
+          ("Immediate disconnect", "load isolated in hardware,\nno software in the path")]
+    bwid = (W - 3.4 - 2 * 0.85) / 3
     for k, (t, s_) in enumerate(hb):
         bx = 1.15 + k * (bwid + 0.85)
         box(ax, bx, 1.00, bwid, 3.25, t, s_, ec=CRITICAL, fc=BG, fs=8.2, subfs=6.9)
-        if k < 3:
+        if k < 2:
             arrow(ax, (bx + bwid, 2.62), (bx + bwid + 0.80, 2.62), col=CRITICAL, lw=1.3)
 
     p = os.path.join(OUT, "diag_fault_flow.png")
