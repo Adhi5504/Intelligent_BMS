@@ -288,7 +288,7 @@ LITERATURE = [
 ]
 
 PRIMARY = [
-    ("LG Energy Solution INR21700-M50", "cell used in the 8S2P pack"),
+    ("LG Energy Solution INR21700-M50", "NMC tier reference"),
     ("DMEGC INR21700-45E", "alternate NMC cell, parsed"),
     ("Panasonic NCR18650B", "NCA tier reference"),
     ("P3 3232 LFP 26650", "LFP tier reference"),
@@ -583,7 +583,7 @@ neighbours, every single cycle, completely invisible to the pack-level reading."
     two_col_bullets(s, M, BODY_Y + 0.10, LEFT_W, 2.20, [
         "8S sets the 33.6 V nominal bus voltage.",
         "2P buys 8 Ah and current headroom.",
-        "Sixteen LG INR21700-M50 cells.",
+        "Sixteen NMC cells in 8S2P.",
         "Eight taps make imbalance observable.",
         "Four NTCs give thermal resolution.",
         "1RC missed the slow relaxation.",

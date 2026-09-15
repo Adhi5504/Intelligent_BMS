@@ -93,7 +93,7 @@ def build():
     # ---------------------------------------------------- 1. acquisition
     x = COLX[0]
     box(ax, x, 18.30, COLW, 2.15, "8S2P battery pack",
-        "16 × INR21700-M50 · 33.6 V · 8 Ah", fc=ACCENT_TINT, subfs=6.8)
+        "16 NMC cells · 33.6 V · 8 Ah", fc=ACCENT_TINT, subfs=6.8)
     box(ax, x, 15.40, COLW, 2.30, "JBD SP24S007 sensing",
         "8 cell taps · 4 NTC\npack V / I · coulomb count")
     box(ax, x, 12.55, COLW, 2.25, "BLE @ 1 Hz  →  Pi 5",

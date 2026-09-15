@@ -110,7 +110,7 @@ def pack_topology():
     ax.text(9.2, 1.28, "8S  →  33.6 V nominal bus          "
                        "2P  →  8 Ah capacity & current headroom",
             ha="center", va="center", fontsize=11.5, fontweight="bold", color=INK)
-    ax.text(9.2, 0.62, "16 cells · LG INR21700-M50 · per-cell resolution is what "
+    ax.text(9.2, 0.62, "16 NMC cells · per-cell resolution is what "
                        "makes imbalance detectable",
             ha="center", va="center", fontsize=9.2, color=MUTED)
     ax.text(9.2, 8.62, "8S2P pack topology", ha="center", va="center",

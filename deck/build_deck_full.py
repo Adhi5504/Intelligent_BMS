@@ -337,7 +337,7 @@ LITERATURE = [
 ]
 
 PRIMARY = [
-    ("LG Energy Solution INR21700-M50", "cell used in the 8S2P pack"),
+    ("LG Energy Solution INR21700-M50", "NMC tier reference"),
     ("DMEGC INR21700-45E", "alternate NMC cell, parsed"),
     ("Panasonic NCR18650B", "NCA tier reference"),
     ("P3 3232 LFP 26650", "LFP tier reference"),
@@ -448,8 +448,8 @@ is multiplied by a physical severity derived from how far past the datasheet
 warning limit we are, raised further if the fault persists. Action: corrective
 instruction, logged alert, and comparison against the cycle history. And
 underneath all of it, the lane that does not depend on any of this — the JBD
-protection logic switching the MOSFETs at the pack, and the Arduino watchdog that
-resets the Pi. If every line of our software failed, that lane still opens the
+protection logic switching the MOSFETs at the pack. If every line of our
+software failed, that lane still opens the
 contactor.""")
     return s
 
@@ -525,7 +525,7 @@ is the case for per-cell sensing in one picture.""")
     bullets(s, M, BODY_Y + 0.20, LEFT_W, 3.05, [
         "8S sets the 33.6 V nominal bus the drivetrain expects.",
         "2P buys 8 Ah capacity and the current headroom.",
-        "Sixteen LG INR21700-M50 cells, 5000 mAh each.",
+        "Sixteen NMC cells, 8S2P.",
         "Eight sense taps make imbalance observable, not inferred.",
         "Four NTC thermistors give spatial thermal resolution.",
     ], size=16.5)
@@ -540,7 +540,7 @@ is the case for per-cell sensing in one picture.""")
 Eight in series gives the 33.6-volt bus the drivetrain wants. Two in parallel
 gives eight amp-hours and, just as importantly, the current headroom to run
 realistic discharge profiles without abusing individual cells. Sixteen LG
-INR21700-M50 cells in total. And eight series groups means eight sense taps,
+NMC cells in total. And eight series groups means eight sense taps,
 which is what makes imbalance a measurement rather than an inference. Four
 thermistors on top of that give us spatial thermal resolution — we can tell
 which end of the pack is running hot, not just that it is hot.""")
@@ -764,35 +764,32 @@ deliberately — on a safety dashboard, never crying wolf matters more.""")
     fault_flow_slide(prs, 13)
 
     # ------------------------------------------------------- 14 hardware
-    s = new_slide(prs, 14, "Three tiers, no single point of failure")
-    bullets(s, M, BODY_Y + 0.10, LEFT_W, 3.10, [
+    s = new_slide(prs, 14, "Two tiers at the edge, as built")
+    bullets(s, M, BODY_Y + 0.10, LEFT_W, 2.00, [
         "Tier 1 — JBD BMS senses eight cell taps and four NTCs.",
-        "Tier 2 — Pi 5 runs logger, XGBoost inference and dashboard.",
-        "Tier 3 — Arduino Uno R4 watches the Pi's heartbeat.",
-        "Missed heartbeat pulls the RUN pin and resets the Pi.",
+        "Tier 2 — Pi 5 runs the logger and XGBoost inference.",
         "Inference stays at the edge: no link, no safety gap.",
+        "Pi dials out to Railway — no inbound port on the pack.",
     ], size=16.5)
-    rect(s, M, 5.16, LEFT_W, 1.30, fill=PANEL, line=HAIRLINE, lw=0.75)
-    text(s, M + 0.22, 5.30, LEFT_W - 0.44, 0.26, "ACCELERATION PATH",
+    rect(s, M, 4.10, LEFT_W, 1.30, fill=PANEL, line=HAIRLINE, lw=0.75)
+    text(s, M + 0.22, 4.24, LEFT_W - 0.44, 0.26, "ACCELERATION PATH",
          size=10, color=ACCENT, bold=True)
-    text(s, M + 0.22, 5.60, LEFT_W - 0.44, 0.76,
+    text(s, M + 0.22, 4.54, LEFT_W - 0.44, 0.76,
          "Zynq-7000 SoC moves the same tree traversal into programmable logic, "
          "freeing the CPU for the logger and the BLE link.",
          size=13, color=INK, line=1.22)
     picture(s, G("diag_hardware.png"), VIS_X, BODY_Y + 0.02, VIS_W, 3.05)
     hy = BODY_Y + 3.20
-    picture(s, E("p06_img1_x51.jpeg"), VIS_X, hy, VIS_W/2 - 0.10, 1.55, card=True)
-    picture(s, E("p06_img2_x52.jpeg"), VIS_X + VIS_W/2 + 0.10, hy, VIS_W/2 - 0.10, 1.55, card=True)
-    caption(s, VIS_X, hy + 1.58, VIS_W/2 - 0.10, "Raspberry Pi 5")
-    caption(s, VIS_X + VIS_W/2 + 0.10, hy + 1.58, VIS_W/2 - 0.10, "Arduino Uno R4 WiFi")
+    picture(s, E("p06_img1_x51.jpeg"), VIS_X + VIS_W/2 - 1.45, hy, 2.90, 1.55, card=True)
+    caption(s, VIS_X + VIS_W/2 - 1.45, hy + 1.58, 2.90, "Raspberry Pi 5")
     notes(s, """
-Three tiers, each doing what the others cannot. The JBD BMS senses: eight taps,
-four thermistors, pack voltage and current. The Pi 5 runs the logger and the
-inference. Inference sits at the edge deliberately — push it
-to a server and every network hiccup becomes an unmonitored window. The third
-tier exists because general-purpose computers hang. An Arduino on its own rail
-watches for a heartbeat and pulls the Pi's RUN pin if it stops. Zynq-7000 is our
-path to take inference off the CPU entirely.""")
+Two tiers at the edge, and I want to be precise about what exists. The JBD BMS
+senses: eight taps, four thermistors, pack voltage and current. The Pi 5 runs
+the logger and the inference. Inference sits at the edge deliberately — push it
+to a server and every network hiccup becomes an unmonitored window.
+A third tier — an independent hardware watchdog on its own power rail — is
+specified and on the roadmap, but we have not built it, so it is not in this
+architecture. Zynq-7000 is our path to take inference off the CPU entirely.""")
 
     # ---------------------------------------------------- 14 system flow
     s = new_slide(prs, 15, "How the whole thing fits together")

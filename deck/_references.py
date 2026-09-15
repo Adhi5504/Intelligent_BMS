@@ -20,7 +20,7 @@ LITERATURE = [
 ]
 
 PRIMARY = [
-    ("LG Energy Solution INR21700-M50", "cell used in the 8S2P pack"),
+    ("LG Energy Solution INR21700-M50", "NMC tier reference"),
     ("DMEGC INR21700-45E", "alternate NMC cell, parsed"),
     ("Panasonic NCR18650B", "NCA tier reference"),
     ("P3 3232 LFP 26650", "LFP tier reference"),
