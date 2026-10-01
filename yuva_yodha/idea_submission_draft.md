@@ -23,6 +23,13 @@ See `architecture.svg`: sensors → edge gateway (acquire, physics baseline, fai
 ## 4. What is new, honestly
 We do not claim a new algorithm. Published work already covers self-supervised fault diagnosis of motors and wear prediction. We did not find prior work that (i) turns wear and failure risk into a rupee and repair-date decision, (ii) combines it with speed control, and (iii) is designed for low-cost SME hardware and quantified in simulation against a defined baseline. Multi-site learning is shown as a small simulation only.
 
+## 4A. Where this sits relative to Schneider Electric's portfolio
+Schneider Electric already offers strong digital services, for example EcoStruxure Asset Advisor (asset management and digital services) and Power Advisor (energy supply optimisation for large sites), plus PowerLogic meters and PLC/automation software. We do not replace these. Our target is the SME that cannot afford or operate that stack today.
+- **Entry-level on-ramp:** a low-cost retrofit that gives a first rupee-denominated view of waste and repair timing, with a natural upgrade path to the full EcoStruxure services as the plant grows.
+- **Interoperable by design:** Modbus and MQTT interfaces, input from existing meters (including PowerLogic-class) where present, and speed control through a standard drive over Modbus.
+- **Different unit of value:** not an alert or a dashboard, but a rupee figure and a repair-by date an owner can act on.
+[Before submitting, check the current product pages for any capability we describe as missing.]
+
 ## 5. Quantified improvement against a defined baseline
 **Metric:** specific energy consumption, SEC = electrical kWh per m³ delivered.
 **Baseline:** the usual SME set-up: a fixed-speed pump with a throttle valve setting the flow.
