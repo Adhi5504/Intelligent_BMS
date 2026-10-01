@@ -1,79 +1,91 @@
-# PumpRupee (working title): a rupee meter for SME motors and pumps
+# PumpProof (working title): forecast the saving before you buy, prove it after
 
 **Challenge 04: Smart Manufacturing.** Team: [names, college]
 
-**One line:** Tell an SME owner in rupees what a motor or pump is silently wasting today, cut that waste by slowing the pump only when the process allows it, and say when repair is worth paying for.
+**One line:** A very low-cost digital energy audit for SME pumps. From about three days of power and pressure logs on the existing pump, it forecasts what speed control would save, with an error band. After the retrofit, the same logger verifies the real saving, so an energy-service company (ESCO) or lender can be repaid out of it.
 
 ## 1. The problem
-Motors and pumps run most of an SME's process load, yet most small factories have no real-time energy monitoring. Two losses go unseen:
-- **Throttled or oversized pumps.** Flow is often controlled by a valve while the motor runs at full speed. By the affinity laws, power falls roughly with the cube of speed, so a 20% speed cut can cut power by about half.
-- **Wear.** A worn pump draws more power for the same flow, and nobody sees it until it fails. Existing alerts say "something is wrong" but not what it costs or when fixing it pays off.
+Pumps and motors take a large share of an SME's process electricity. A common set-up is a fixed-speed pump with a throttle valve setting the flow, so the motor burns energy against the valve. A variable-speed drive (VFD) can remove most of this loss, and BEE-linked sources put the saving potential of motor and VFD measures at roughly 25 to 30%.
 
-## 2. Our solution
-A retrofit kit with three layers, running on an edge device (ESP32 or Raspberry Pi) with no cloud needed for control.
-1. **Sense.** A CT clamp for current and power, a vibration sensor, and a pressure sensor (plus flow where available).
-2. **Know.** A physics baseline of power against speed and load. Excess power over the healthy baseline is the *waste*. Vibration trends feed a small *failure-risk* model. Together they give a rupee-per-day number.
-3. **Decide.** (a) A speed controller drives a VFD to the lowest speed that still meets the flow and pressure the process needs. (b) A cost model compares the running cost of waiting with the repair cost and outputs "repair by [date], here is the math". (c) Where a tank buffers the flow, pumping is shifted to off-peak hours.
+The owner still cannot get a cheap, trusted answer to three questions:
+1. How much will I save on *this* pump?
+2. Is it worth the money?
+3. Did it really save after I bought it?
 
-The owner sees three numbers: today's waste in rupees, savings this month, and the repair date.
+Without them, small units do not invest. Documented financing programmes in India already let MSMEs repay energy upgrades from the money saved, but that model depends on savings someone can trust. Very small units also struggle to access formal finance.
 
-## 3. Architecture
-See `architecture.svg`: sensors → edge gateway (acquire, physics baseline, failure-risk model, speed controller, local dashboard) → VFD over Modbus RTU; owner view, ERP/accounts export and Scope 2 CO₂ report on the business side. A manual bypass to fixed speed is always kept.
+## 2. The solution
+| Step | What happens |
+|---|---|
+| 1. Audit (about 3 days) | A clamp-on power logger and a pressure sensor go on the existing pump. No drive and no flow meter are needed. The user enters nameplate data and does one flow check, for example timing a tank fill. |
+| 2. Forecast | A physics model estimates the flow profile and the throttling loss, then reports the predicted specific energy consumption (SEC, kWh per m³), the predicted saving with an error band, and the payback. |
+| 3. Retrofit | Any drive, including a Schneider Electric Altivar. We do not replace the drive; we answer whether to buy one. |
+| 4. Verify | The same logger measures after the change and reports the baseline-adjusted saving, in the style of IPMVP Option B (retrofit isolation). The report supports ESCO payments, lender confidence and Scope 2 CO2 requests from buyers. |
 
-## 4. What is new, honestly
-We do not claim a new algorithm. Published work already covers self-supervised fault diagnosis of motors and wear prediction. We did not find prior work that (i) turns wear and failure risk into a rupee and repair-date decision, (ii) combines it with speed control, and (iii) is designed for low-cost SME hardware and quantified in simulation against a defined baseline. Multi-site learning is shown as a small simulation only.
+Everything runs on a small edge device and keeps working without internet. The owner sees a short report in plain language: forecast saving in rupees, payback, and later the verified saving.
 
-## 4A. Where this sits relative to Schneider Electric's portfolio
-Schneider Electric already offers strong digital services, for example EcoStruxure Asset Advisor (asset management and digital services) and Power Advisor (energy supply optimisation for large sites), plus PowerLogic meters and PLC/automation software. We do not replace these. Our target is the SME that cannot afford or operate that stack today.
-- **Entry-level on-ramp:** a low-cost retrofit that gives a first rupee-denominated view of waste and repair timing, with a natural upgrade path to the full EcoStruxure services as the plant grows.
-- **Interoperable by design:** Modbus and MQTT interfaces, input from existing meters (including PowerLogic-class) where present, and speed control through a standard drive over Modbus.
-- **Different unit of value:** not an alert or a dashboard, but a rupee figure and a repair-by date an owner can act on.
-[Before submitting, check the current product pages for any capability we describe as missing.]
+## 3. How the forecast works, and its limits
+The audit model uses the pump's curves (head and efficiency against flow) and the plant's system curve (static lift plus friction). With logged power and pressure at fixed speed, it estimates the flow at each hour, then computes the energy the same flow would need at the lowest speed that still meets the system curve.
 
-## 5. Quantified improvement against a defined baseline
-**Metric:** specific energy consumption, SEC = electrical kWh per m³ delivered.
-**Baseline:** the usual SME set-up: a fixed-speed pump with a throttle valve setting the flow.
-**Constraint (throughput and quality preserved):** delivered flow is never below the demanded flow, and the required system head (pressure) is always met. The speed controller only lowers speed to the point where the pump curve meets the system curve.
+The main error source is the pump curve, not sensor noise. Real pumps often lack a trusted curve, so we anchor the model with one measured flow point. Where a manufacturer supplies factory curves for the exact model, the error falls further.
 
-Simulation (`pump_sim.py`): a 100 m³/h, 30 m design-point pump, a 16-hour shift with flow demand between 60 and 100 m³/h, static lift 10 m.
+## 4. Evidence so far (simulation of a generic pump, not measured)
+The simulated pump is a made-up centrifugal pump: 100 m³/h at 30 m, 40 m shut-off head, 75% best-point efficiency, 90% motor efficiency, 10 m static lift, 16-hour shift with demand of 60 to 100 m³/h, tariff ₹8/kWh. It must be replaced with a real datasheet curve.
 
-| | Baseline (throttled) | Proposed (speed control) |
+**Saving (`pump_sim.py`).** Metric: SEC, kWh per m³ delivered. Baseline: fixed speed with throttle valve. Constraint: flow is never below demand and the required head is always met.
+
+| | Baseline | With speed control |
 |---|---|---|
 | SEC (kWh/m³) | 0.142 | 0.099 |
 | Energy per day (kWh) | 178.8 | 124.9 |
 
-**SEC reduction: about 30%** at the same delivered volume (1,260 m³/day). Over 300 days at ₹8/kWh that is about 16,200 kWh, about ₹1.29 lakh and about 11.5 t CO₂ per pump per year (grid factor 0.71 kg/kWh, to be verified against the current CEA value).
+That is a **30% SEC reduction**, about 16,200 kWh and ₹1.29 lakh per pump per year, and about 11.5 t CO2 (grid factor 0.71 kg/kWh, to be verified against the current CEA value). The saving falls as static lift grows: about 35%, 30%, 25% and 20% at 5, 10, 15 and 20 m of static lift. Motor efficiency is held constant, which slightly overstates part-load savings.
 
-**Sensitivity, stated openly:** the saving shrinks when a larger share of the head is static lift, because the cube-law gain applies to friction head. With static lift of 5, 10, 15 and 20 m the SEC reduction is about 35%, 30%, 25% and 20%. The simulation also holds motor efficiency constant, which slightly overstates savings at part load. We will replace the assumed curves with the datasheet curves of a real pump and validate on a bench rig if time allows.
+**Forecast accuracy (`forecast_check.py`).** Error in the forecast saving, in percentage points:
 
-**Repair timing (separate illustrative model, `rupee_meter.py`):** for a 15 kW pump with 8% extra power draw, energy waste alone justifies repair in about 386 days; adding vibration-based failure risk moves the recommendation to about 49 days.
+| Case | Mean error |
+|---|---|
+| Pump curve exactly right | 0.5 to 1.4 |
+| Curve wrong by a moderate amount | 5.5 to 17.5, systematic |
+| Same, after one measured flow point (±5%) | about 1 to 3 in three of four cases |
+| Head over-estimated by about 10% | not fixed by one point (about 7) |
+
+So the honest claim is: good to roughly ±3 points in most mismatch cases after one flow check, with a larger error otherwise, and the verification step then replaces the forecast with a measured result.
+
+## 5. What is new, honestly
+We do not claim a new algorithm. Sensorless flow and efficiency estimation already exists in academic work and in commercial drives, including Schneider Electric's Altivar Process, which estimates flow from pump curves entered by the user. Measurement and verification (IPMVP) and ESCO financing for MSMEs also exist, and at least one Indian ESCO already offers an AI-based motor programme [to be compared against its offering before submission].
+
+Our contribution is narrower: a pre-purchase forecast with an explicit error band for pumps that have no drive, no flow meter and no trusted curve, tied to a post-retrofit verification report on the same cheap hardware, aimed at small plants that incumbent tools do not reach.
 
 ## 6. Fit with Indian SME conditions
-- **Power quality:** voltage sags, phase imbalance and outages are common. The edge device logs and recovers on its own, and the controller returns to fixed speed on any fault.
-- **Site conditions:** dust, heat and humidity. Sensors are clamp-on or bolt-on, with sealed enclosures.
-- **Legacy equipment:** old motors and no PLC. The kit is retrofit and vendor-agnostic; it works with the pump already installed.
-- **Skills and connectivity:** no data scientist, patchy internet. Everything runs on the edge with a three-number display in the local language, and it syncs when the network returns.
-- **Money:** low capital. Payback is stated up front, and a shared-savings option lowers the entry cost.
-- **Existing systems:** most SMEs use accounts software, not a full ERP. We export CSV and API data, not deep integration.
+- **Power quality:** sags, imbalance and outages are common; the logger records through them and flags gaps.
+- **Site conditions:** dust, heat and humidity; clamp-on and bolt-on sensors in sealed enclosures.
+- **Legacy equipment:** old motors, no PLC; it works on the pump already installed.
+- **Skills and connectivity:** no data scientist and patchy internet; local-language report and edge processing.
+- **Capital:** low entry cost; the verified saving can fund the upgrade through an ESCO.
+- **Existing systems:** accounts software rather than full ERP; CSV and API export.
 
 ## 7. Deployment and business model
-- **Target segment:** SMEs with continuous pumping or fan load, such as textile processing units, food and dairy plants, foundry cooling circuits, and small campuses or water utilities. [Choose one segment for the pilot and add a verified count of units.]
-- **Installation:** one day per pump: clamp sensors, pressure tap, edge box, VFD commissioning, with the manual bypass kept.
-- **Cost and payback (to be filled from quotes):** payback = (kit cost + drive cost) ÷ annual saving. With the simulated saving of ₹1.29 lakh/year, an assumed ₹1.2 lakh drive plus a ₹15,000 kit gives about 12–13 months. For sites that already have a VFD, only the kit is needed and payback is much shorter.
-- **Pricing options:** outright purchase, or shared savings paid out of the measured rupee saving, with no upfront risk for the SME.
-- **Scale-up:** (1) 3–5 pilots through a local SME cluster or industry association; (2) channel partners such as electrical distributors and VFD integrators; (3) extend the same model to compressors and fans; (4) anonymised multi-site learning so a new machine gets a good starting model.
+- **Customers:** (a) ESCOs and VFD dealers who need cheap audits and trusted verification; (b) pump manufacturers and dealers who can bundle it with new pumps and use the factory curves; (c) the SME owner directly. [Choose one pilot segment, for example textile processing, dairy or small water utilities, and add a verified count.]
+- **Installation:** one visit per pump to fit the clamp and pressure sensor, plus one flow check.
+- **Cost and payback [to be filled from real quotes]:** payback = (drive cost + logger cost) ÷ annual saving. With the simulated ₹1.29 lakh/year, an assumed ₹1.2 lakh drive and ₹15,000 logger give about 12 to 13 months.
+- **Revenue:** per-audit fee, verification subscription, or a share of the verified saving through an ESCO.
+- **Scale-up:** (1) pilot with an ESCO or pump dealer on 3 to 5 pumps; (2) channel through dealers and SME clusters; (3) extend the same model to fans and compressors; (4) pool anonymised audits to improve the starting curves for new pump models.
 
 ## 8. Risks and assumptions
-- Converting vibration into failure risk needs real degradation data. We will use emulated wear on a test rig or public run-to-failure datasets and label them as such.
-- Savings depend on the process load profile and the static-lift share (see the sensitivity above).
-- Tariff, repair-cost and downtime inputs should come from an SME's bills and invoices.
-- Multi-site learning is a simulation, not a deployment.
+- All results so far are simulated for a generic pump. A real pump curve, and ideally a few measurements, are needed before claims are made about a named pump.
+- The forecast depends on the pump curve and on the share of static lift; the error band must be shown to users.
+- Demand for this tool is a hypothesis; it should be tested with at least one ESCO, dealer or pump owner.
+- Only speed control is modelled. Impeller trimming and right-sizing could use the same model but are not validated.
+- Savings verified by a pump seller may carry less trust than third-party verification.
 
 ## 9. Fit with the challenge
-Primary: IoT energy monitoring with an edge dashboard, and predictive maintenance for motors. Secondary: off-peak load shifting, BEE benchmarking of specific energy consumption (benchmark to be verified), and Scope 2 CO₂ reporting.
+Primary: the digital energy-audit tool with a prioritised retrofit roadmap, and IoT energy monitoring with an edge dashboard. Secondary: Scope 2 CO2 reporting for buyer requests, benchmarking SEC against BEE norms [benchmark to be verified], and off-peak load shifting.
 
-## 10. Attached artefacts
-1. `architecture.svg`: system and data-flow diagram
-2. `pump_sim.py`: SEC simulation (throttle vs speed control)
-3. `rupee_meter.py`: waste, repair-date and payback model
-4. Still to add: dashboard wireframe and data model
+## 10. Artefacts
+1. `pump_sim.py`: SEC simulation, throttle vs speed control
+2. `forecast_check.py`: forecast accuracy under pump-curve error, with one-point calibration
+3. `softsensor_check.py`: earlier flow and wear estimation check
+4. `rupee_meter.py`: earlier repair-timing model (optional module)
+5. `architecture.svg`: **to be redrawn** for the audit, retrofit and verify loop
+6. **Still to add:** audit-report wireframe, data model, real pump curve, real cost quotes
