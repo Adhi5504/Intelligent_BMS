@@ -1,0 +1,84 @@
+{
+  "pump": {
+    "manufacturer": "Grundfos",
+    "model": "NB 65-160/157 A-F2-A-E-BAQE",
+    "model_current_code": "NB 65-160/157 AAF2AESBAQENW1",
+    "product_number": "97839240",
+    "type": "Close-coupled, single-stage, end-suction centrifugal volute pump (EN 733 / ISO 5199)",
+    "status": "No longer in production (per Grundfos Product Center, 2026-10-02)",
+    "impeller_actual_mm": 157,
+    "impeller_nominal_mm": 160,
+    "inlet": "DN 80",
+    "outlet": "DN 65",
+    "curve_tolerance": "ISO 9906:2012 Grade 3B"
+  },
+  "motor": {
+    "rated_power_P2_kW": 11,
+    "rated_power_HP_converted": 14.75,
+    "HP_note": "Calculated as 11 / 0.746; not printed by manufacturer",
+    "poles": 2,
+    "frequency_Hz": 50,
+    "voltage": "3 x 380-415 D / 660-690 Y V (curve drawn at 3x400 V)",
+    "rated_current_A": "20.8-19.8 / 12.0-11.8",
+    "rated_speed_rpm": "2940-2950",
+    "efficiency_class": "IE3",
+    "motor_eff_full_load_pct": 91.2,
+    "motor_eff_3_4_load_pct": 91.8,
+    "motor_eff_1_2_load_pct": 91.3,
+    "motor_type": "160MB"
+  },
+  "fluid": {
+    "liquid": "Water",
+    "temperature_C": 20,
+    "density_kg_m3": 998.2
+  },
+  "rated_point": {
+    "Q_m3h": 114,
+    "H_m_datasheet": 26.5,
+    "H_m_product_center": 26.07,
+    "note": "0.43 m discrepancy between 2018 datasheet and current Product Center curve; likely curve/motor-model revision"
+  },
+  "bep": {
+    "eta_pump_max_pct": 81.4,
+    "Q_range_m3h": [105, 108],
+    "note": "Pump efficiency reads 81.4% at 105, 108, 110 m3/h (1 decimal). Recomputed from QH/P2: 81.40, 81.41, 81.36 -- differences below input rounding, so BEP flow not resolvable finer than ~105-108 m3/h. Pump+motor efficiency peaks at 75.0% at 105 m3/h."
+  },
+  "shut_off": {
+    "H_at_Q0_m": null,
+    "note": "Tool does not accept Q = 0, 0.1, 0.2. Closest: Q = 0.5 m3/h -> H = 33.26 m, P2 = 4.733 kW. Do NOT label as shut-off head."
+  },
+  "max_P2_along_curve_kW": 10.59,
+  "non_overloading": true,
+  "curve_end_Q_m3h_approx": 139,
+  "units": {
+    "Q": "m3/h",
+    "H": "m",
+    "eta": "%",
+    "P1": "kW electrical input",
+    "P2": "kW shaft power",
+    "NPSHr": "m",
+    "n": "rpm"
+  },
+  "columns": ["Q", "H", "eta_pump", "P2", "eta_pump_motor", "P1", "NPSHr", "n"],
+  "data": [
+    [0.5, 33.26, 1.0, 4.733, 0.9, 5.126, 2.17, 2981],
+    [1, 33.25, 1.9, 4.755, 1.8, 5.149, 2.19, 2981],
+    [10, 33.15, 17.5, 5.163, 16.2, 5.580, 2.40, 2979],
+    [20, 33.01, 31.8, 5.641, 29.5, 6.087, 2.59, 2976],
+    [40, 32.61, 53.4, 6.641, 49.5, 7.160, 2.85, 2971],
+    [60, 31.82, 67.9, 7.651, 62.9, 8.258, 3.08, 2965],
+    [80, 30.44, 76.9, 8.612, 71.1, 9.316, 3.40, 2959],
+    [100, 28.22, 81.1, 9.464, 74.8, 10.27, 3.94, 2953],
+    [105, 27.51, 81.4, 9.652, 75.0, 10.48, 4.12, 2952],
+    [108, 27.05, 81.4, 9.761, 74.9, 10.60, 4.24, 2952],
+    [110, 26.73, 81.4, 9.830, 74.9, 10.68, 4.33, 2951],
+    [114, 26.07, 81.1, 9.961, 74.6, 10.83, 4.51, 2950],
+    [120, 24.96, 80.3, 10.15, 73.8, 11.04, 4.82, 2949],
+    [130, 22.85, 77.6, 10.41, 71.2, 11.34, 5.43, 2947]
+  ],
+  "sources": {
+    "datasheet_pdf": "https://www.lenntech.com/uploads/grundfos/97839240/Grundfos_NB-65-160-157-A-F2-A-E-BAQE.pdf",
+    "product_center": "https://product-selection.grundfos.com (search NB 65-160/157, product 97839240)",
+    "data_retrieved": "2026-10-02, duty-point readouts via Operating point -> Input"
+  }
+}
