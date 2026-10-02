@@ -12,6 +12,7 @@ Prices come from search-result listings of Indian sellers. They vary by seller, 
 | Enclosure, supply, 4-20 mA interface, wiring | **Not priced; assumed Rs 2,000** | assumption |
 
 **Kit totals (computed):** basic single-phase audit kit about **Rs 6,100**; three-phase kit with a second transmitter for strainer pressure drop about **Rs 10,200**; pessimistic (Rs 12,000 pressure sensors) about **Rs 28,100**. A certified power meter would cost more than hobby-grade clamps.
+**Stress tests show a process-side pressure sensor is the most valuable extra sensor**: a third transmitter adds about Rs 3,068, taking the three-phase kit to about **Rs 13,300** (about Rs 31,200 with Rs 12,000 industrial transmitters).
 
 ## VFD, about 11 kW (15 HP), 3-phase
 | Listing | Price |
