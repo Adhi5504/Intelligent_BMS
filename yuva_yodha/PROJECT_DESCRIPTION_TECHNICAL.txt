@@ -1,0 +1,19 @@
+Problem. Centrifugal pumps are usually oversized, so plants throttle them with a valve that burns the surplus head as heat. Flow, the variable that exposes this, is costly to measure: an energy-audit practitioner reports wrong sizing is the most common cause and 30–40% of ultrasonic flow readings go wrong. Electrical power and pressure are cheap to measure.
+
+Solution. PumpRupee is a clamp-on audit kit with a web dashboard. An ESP32 logs real power (SCT-013 clamp, ZMPT101B voltage), discharge pressure and optional suction and process-side pressure (4–20 mA transmitters on existing gauge ports) for 7–14 days. It audits and recommends; it never controls the pump.
+
+Technical approach.
+1) Pump model: cubic fits to the 14 manufacturer readouts of a Grundfos NB 65-160/157 (head, shaft power, motor efficiency).
+2) Calibration: a real pump differs from its datasheet, so a head scale s_h and a power scale s_p are fitted from the logs by profile likelihood, each record explained by its best flow. Optional anchors: shut-off head, closed-valve power.
+3) Flow inference: flow is recovered per record from measured head and power, with no flow meter.
+4) System curve: H = H_static + kQ²; a process-side sensor measures it.
+5) Savings forecast: speed matching solves r²·H(Q/r) = H_required using the affinity laws (P ∝ r³), VFD efficiency 0.97, for constant- and proportional-pressure control.
+6) Waste attribution: a Shapley value over three causes (throttling, impeller wear, strainer fouling), averaged over all six orderings, so the shares add up exactly.
+7) Wear drift: a CUSUM test (k = 0.5σ, h = 5σ, baseline from the first 14 days) on a daily wear estimate.
+8) Output: SEC (kWh/m³), ₹/m³, ₹/year by cause, cheapest fix, lowest safe setpoint, VFD payback, and a before/after check.
+
+Simulated results (no field data). At 10 m lift, 16 h/day, 300 days and ₹8/kWh, a VFD saves 19.3% (₹69,292, 6.1 t CO₂ per year) with constant pressure and 35.5% (₹1,27,178, 11.3 t) with proportional pressure; the valve is 83–93% of waste. Forecast error in percentage points: datasheet only 7.2 (8.4 under stress); learned from logs 1.6 (10.5 under stress); with a process-side sensor 1.4 under stress. The assumed system curve, not the pump curve, dominates the error. Wear is detected at about 2–4% with one false alarm in 3 × 365 simulated days. Payback is 4–19 months for an oversized pump and 2–4+ years if right-sized.
+
+Prototype and innovation. The dashboard (https://pumprupee-dashboard.vercel.app/) ports the model to TypeScript, reproduces the Python results in 13 automated tests, and calibrates from an uploaded CSV in the browser. Sensorless flow and pump monitoring already exist (Altivar Process, KSB PumpMeter, Samotics). Our contribution is the integration: ₹ by cause, the priced value of an extra sensor, a shared ₹6,100–13,300 kit and a pump-specific VFD verdict, complementing Schneider drives and EcoStruxure.
+
+Limits. Simulation only; about ±3 points needs a measured system curve, otherwise about ±10; single pump, steady state; bench test next.
