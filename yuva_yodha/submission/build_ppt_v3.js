@@ -215,7 +215,7 @@ async function icon(name, color = "FFFFFF") {
   }
   const chips5 = ["₹ waste by cause", "No flow meter", "No shutdown", "VFD verdict", "Upload your logs", "Reusable kit"];
   chips5.forEach((c, i) => tag(s, c, 0.6 + (i % 3) * 1.8, 5.3 + Math.floor(i / 3) * 0.4, 1.7, i % 2 ? "2E7D5B" : DG, "FFFFFF", 10.5));
-  linkBlock(s, 0.6, 6.2, 0.72);
+  T(s, [{ text: "Live prototype dashboard", options: { bold: true, fontSize: 13, color: DG, breakLine: true } }, { text: LINK, options: { fontSize: 12, color: DG, hyperlink: { url: LINK }, breakLine: true } }, { text: "Simulated data", options: { fontSize: 10, color: MUTED } }], { x: 0.6, y: 6.25, w: 4.8, h: 0.7 });
   const b5 = shot(s, "crop_kpis", 5.95, 1.4, 6.8, [1, 1, 1]);
   legend(s, ["₹ saving per year with a VFD (simulated)", "Specific energy: before → after (kWh/m³)", "VFD payback range at ₹50,200–1,09,400"], 5.95, b5 + 0.04, 6.8, 11.5);
   card(s, 5.95, 5.75, 6.8, 1.1, { fill: { color: LGREEN }, line: { color: GREEN, width: 2 } });
