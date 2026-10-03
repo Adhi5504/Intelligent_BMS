@@ -238,17 +238,30 @@ async function icon(name, color = "FFFFFF") {
   });
   T(s, [{ text: "Shapley = ", options: { bold: true } }, { text: "fair split of blame between causes.  " }, { text: "CUSUM = ", options: { bold: true } }, { text: "early alarm when the pump slowly wears.  " }, { text: "SEC = ", options: { bold: true } }, { text: "electricity units per m³ pumped." }],
     { x: 0.6, y: 3.4, w: 6.55, h: 0.5, fontSize: 10.5 });
-  card(s, 0.6, 3.95, 6.55, 2.95);
-  T(s, "Grundfos NB 65-160/157 curves (fit to maker data)", { x: 0.72, y: 4.0, w: 6.3, h: 0.28, fontSize: 12, bold: true, color: DG });
-  const NQ = 7;   // Q = 10..70: every series is defined here, so the chart XML has no empty points (empty points make PowerPoint repair the file)
-  const qL = CV.Q.slice(0, NQ).map(String), clip = (arr) => arr.slice(0, NQ);
-  s.addChart(pres.charts.LINE, [
-    { name: "Pump, full speed", labels: qL, values: clip(CV.pump) }, { name: "System, valve open (assumed 10 m lift)", labels: qL, values: clip(CV.sys) },
-    { name: "System, throttled", labels: qL, values: clip(CV.thr) }, { name: "Pump slowed by VFD (72%)", labels: qL, values: clip(CV.vfd) }],
-    { x: 0.65, y: 4.25, w: 6.45, h: 2.35, chartColors: [DG, GREY, ORANGE, GREEN], lineSize: 2.5, lineDataSymbol: "none", lineDash: ["solid", "solid", "solid", "dash"], showLegend: true, legendPos: "r", legendFontSize: 9, legendFontFace: FONT,
-      catAxisLabelFontSize: 9, valAxisLabelFontSize: 9, catAxisLabelFontFace: FONT, valAxisLabelFontFace: FONT, valGridLine: { color: "E6ECE8", size: 0.5 }, catGridLine: { style: "none" }, showCatAxisTitle: true, catAxisTitle: "Flow, m³/h", catAxisTitleFontSize: 9,
-      showValAxisTitle: true, valAxisTitle: "Head, m", valAxisTitleFontSize: 9, valAxisMinVal: 0, valAxisMaxVal: 40 });
-  T(s, "At an off-peak 61.6 m³/h the throttled pump delivers 31.7 m; the pipe needs 15.4 m. The gap is priced in ₹. Simulated; system curve assumed.", { x: 0.72, y: 6.55, w: 6.3, h: 0.32, fontSize: 9.5, italic: true, color: MUTED });
+  // chart drawn as an image (always renders, in every viewer)
+  const NQ = 7, qs6 = CV.Q.slice(0, NQ);
+  const GW = 760, GH = 450, ML = 70, MR = 20, MT = 24, MB = 150;
+  const gx = (q) => ML + ((q - 10) / 60) * (GW - ML - MR), gy = (h) => MT + (1 - h / 40) * (GH - MT - MB);
+  const poly = (arr, color, dash) => `<polyline fill="none" stroke="${color}" stroke-width="5" stroke-linejoin="round" ${dash ? 'stroke-dasharray="14 9"' : ""} points="${arr.slice(0, NQ).map((v, i) => gx(qs6[i]) + "," + gy(v)).join(" ")}"/>`;
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${GW}" height="${GH}" viewBox="0 0 ${GW} ${GH}" font-family="Arial, Helvetica, sans-serif"><rect width="${GW}" height="${GH}" fill="#FFFFFF"/>`;
+  for (let h = 0; h <= 40; h += 10) svg += `<line x1="${ML}" x2="${GW - MR}" y1="${gy(h)}" y2="${gy(h)}" stroke="#E3EEE7" stroke-width="2"/><text x="${ML - 10}" y="${gy(h) + 8}" font-size="24" fill="#475569" text-anchor="end">${h}</text>`;
+  for (let q = 10; q <= 70; q += 10) svg += `<text x="${gx(q)}" y="${GH - MB + 34}" font-size="24" fill="#475569" text-anchor="middle">${q}</text>`;
+  svg += `<text x="${(ML + GW - MR) / 2}" y="${GH - MB + 68}" font-size="24" fill="#475569" text-anchor="middle">Flow, m³/h</text><text x="22" y="${MT + 120}" font-size="24" fill="#475569" transform="rotate(-90 22 ${MT + 120})">Head, m</text>`;
+  svg += poly(CV.pump, "#0E5A32") + poly(CV.sys, "#9AA5A0") + poly(CV.thr, "#E07B00") + poly(CV.vfd, "#3DCD58", true);
+  svg += `<line x1="${gx(61.6)}" x2="${gx(61.6)}" y1="${gy(31.7)}" y2="${gy(15.4)}" stroke="#C0392B" stroke-width="5"/><circle cx="${gx(61.6)}" cy="${gy(31.7)}" r="8" fill="#C0392B"/><circle cx="${gx(61.6)}" cy="${gy(15.4)}" r="8" fill="#C0392B"/><text x="${gx(61.6) - 14}" y="${gy(23.5) + 8}" font-size="24" font-weight="bold" fill="#C0392B" text-anchor="end">wasted head</text><text x="${gx(61.6) - 14}" y="${gy(23.5) + 36}" font-size="24" font-weight="bold" fill="#C0392B" text-anchor="end">16.3 m</text>`;
+  [["#0E5A32", "Pump, full speed", 0], ["#9AA5A0", "System, valve open", 0], ["#E07B00", "System, throttled", 0], ["#3DCD58", "Pump slowed by VFD", 1]].forEach(([c, t, d], i) => {
+    const lx = ML + (i % 2) * 340, ly = GH - 62 + Math.floor(i / 2) * 40;
+    svg += `<line x1="${lx}" x2="${lx + 50}" y1="${ly}" y2="${ly}" stroke="${c}" stroke-width="6" ${d ? 'stroke-dasharray="12 8"' : ""}/><text x="${lx + 62}" y="${ly + 8}" font-size="23" fill="#16261F">${t}</text>`;
+  });
+  svg += "</svg>";
+  const gpng = "image/png;base64," + (await sharp(Buffer.from(svg)).png().toBuffer()).toString("base64");
+  card(s, 0.6, 3.95, 3.95, 2.95);
+  T(s, "Grundfos NB 65-160/157 curves", { x: 0.72, y: 4.0, w: 3.75, h: 0.28, fontSize: 11, bold: true, color: DG });
+  s.addImage({ data: gpng, x: 0.68, y: 4.3, w: 3.8, h: 3.8 * GH / GW });
+  T(s, "Off-peak 61.6 m³/h. Simulated; the system curve is assumed.", { x: 0.72, y: 6.62, w: 3.75, h: 0.25, fontSize: 9, italic: true, color: MUTED });
+  card(s, 4.7, 3.95, 2.45, 2.95, { fill: { color: LGREEN }, line: { color: GREEN, width: 1.5 } });
+  T(s, "How flow is inferred", { x: 4.8, y: 4.0, w: 2.3, h: 0.3, fontSize: 12, bold: true, color: DG });
+  T(s, bullets(["Head → flow from the pump curve H(Q)", "Power → shaft power via motor efficiency → flow", "Two scales, s_h and s_p, fitted from 7–14 days of logs", "Optional anchors: shut-off head, closed-valve power", "No flow meter used"], { paraSpaceAfter: 3 }), { x: 4.8, y: 4.32, w: 2.28, h: 2.55, fontSize: 10.5 });
   const b6 = shot(s, "dash_4_trends", 7.5, 1.1, 5.25, [1, 1, 1]);
   legend(s, ["14 days of ESP32 logs (simulated playback)", "Flow inferred from curve + power + head", "Calibration error vs study mean"], 7.5, b6 + 0.02, 5.25, 10.5);
   T(s, "About ±3 points only with a measured system curve; otherwise about ±10.", { x: 7.5, y: b6 + 0.85, w: 5.25, h: 0.3, fontSize: 11, bold: true, color: DG });
@@ -333,21 +346,33 @@ async function icon(name, color = "FFFFFF") {
     "Single pump, steady state. Out of scope: parallel pumps, closed loops, pumps already on drives, min-flow/NPSH, control dynamics"]), { x: 0.85, y: 5.65, w: 11.7, h: 1.25, fontSize: 12.5 });
   s.addNotes("Lead with 'done' and 'next'. Ask: a pilot plant and a reference flow meter.");
 
-  // ===== 11. TEAM =====
+  // ===== 11. TEAM + REFERENCES =====
   s = pres.addSlide({ masterName: "CONTENT" });
   head(s, "Team Introduction", "Team ANS_4X · Schneider Electric Yuva Yodha 2026 · Smart Manufacturing");
-  const team = [["Akshaya V G", "Team Lead & Software/Dashboard", "Data pipeline and the PumpRupee web dashboard"], ["Adithyaa J", "Embedded Hardware", "ESP32 logger, power clamp and pressure-sensor integration"],
-    ["Nikilaesh B", "Energy Analytics", "Pump hydraulics model, Shapley waste split and VFD payback logic"], ["Siva Subramaniam S", "Simulation & Validation", "Pump-curve simulation, CUSUM wear-drift testing, pilot and roadmap planning"]];
+  const team = [["FaLaptopCode", "Akshaya V G", "Team Lead & Software/Dashboard", "Data pipeline and the PumpRupee web dashboard"], ["FaMicrochip", "Adithyaa J", "Embedded Hardware", "ESP32 logger, power clamp and pressure-sensor integration"],
+    ["FaChartLine", "Nikilaesh B", "Energy Analytics", "Pump hydraulics model, Shapley waste split and VFD payback logic"], ["FaFlask", "Siva Subramaniam S", "Simulation & Validation", "Pump-curve simulation, CUSUM wear-drift testing, pilot and roadmap planning"]];
   for (let i = 0; i < 4; i++) {
     const x = 0.6 + i * 3.077;
-    card(s, x, 1.5, 2.9, 3.85);
-    s.addShape(S.OVAL, { x: x + 0.75, y: 1.7, w: 1.4, h: 1.4, fill: { color: LGREEN }, line: { color: GREEN, width: 2 } });
-    T(s, "Insert\nphoto", { x: x + 0.75, y: 1.7, w: 1.4, h: 1.4, fontSize: 12, color: MUTED, align: "center", valign: "middle" });
-    T(s, [{ text: team[i][0], options: { bold: true, fontSize: 18, breakLine: true, paraSpaceAfter: 3 } }, { text: team[i][1], options: { fontSize: 13, bold: true, color: DG, breakLine: true, paraSpaceAfter: 6 } }, { text: team[i][2], options: { fontSize: 12, color: MUTED } }], { x: x + 0.15, y: 3.25, w: 2.6, h: 2.05, align: "center" });
+    card(s, x, 1.4, 2.9, 1.95);
+    await circ(s, x + 0.15, 1.52, 0.5, team[i][0]);
+    T(s, [{ text: team[i][1], options: { bold: true, fontSize: 15, breakLine: true } }, { text: team[i][2], options: { fontSize: 11, bold: true, color: DG } }], { x: x + 0.75, y: 1.5, w: 2.05, h: 0.6, valign: "middle" });
+    T(s, team[i][3], { x: x + 0.15, y: 2.2, w: 2.6, h: 1.1, fontSize: 11.5, color: MUTED });
   }
-  linkBlock(s, 0.6, 5.6, 1.1);
-  T(s, "Cheap kit. Clever inference. Answers in rupees.", { x: 6.4, y: 5.75, w: 6.35, h: 0.8, fontSize: 24, bold: true, color: DG, valign: "middle" });
-  s.addNotes("Close: cheap kit, clever inference, answers in rupees. Share the live link.");
+  card(s, 0.6, 3.5, 12.15, 2.55);
+  T(s, "References & data sources", { x: 0.75, y: 3.55, w: 6, h: 0.32, fontSize: 14, bold: true, color: DG });
+  const refsL = ["Pump data: Grundfos Product Center duty-point readouts for NB 65-160/157 (product no. 97839240), retrieved 2026-10-02. Curve tolerance ISO 9906:2012 Grade 3B. Curves in this deck are cubic fits to those 14 points.",
+    "Emission factor: CEA CO₂ Baseline Database for the Indian Power Sector, v21.0 (FY2024-25): 0.710 kg CO₂/kWh.",
+    "Energy-audit practitioner input (paraphrased, not named): wrong sizing is the most common cause of throttling; 30–40% of ultrasonic flow readings go wrong.",
+    "Method: affinity laws; Shapley value attribution; CUSUM change detection; IPMVP-style measurement and verification."];
+  const refsR = ["Component prices (indicative online listings, 2026-10-02, not quotes): ESP32 (Robu); SCT-013 clamp (ElectronicsComp, Robodo, Robocraze); ZMPT101B voltage sensor; 4–20 mA pressure transmitters (Nishka, Utopia, Shri Instruments); VFDs (Delta MS300 listing, Industrybuying). Install cost ₹15,000 is an assumption.",
+    "Prior art: KSB PumpMeter, US DOE PSAT, Samotics, Schneider Altivar Process and EcoStruxure, Indian IoT vendors and ESCOs.",
+    "Simulation: our open Python scripts (fixed seeds) in the project repository, folder yuva_yodha/; dashboard source in yuva_yodha/dashboard/.",
+    "All results are simulated. No lab or field data."];
+  T(s, bullets(refsL, { paraSpaceAfter: 3 }), { x: 0.75, y: 3.9, w: 5.85, h: 2.1, fontSize: 9.5 });
+  T(s, bullets(refsR, { paraSpaceAfter: 3 }), { x: 6.8, y: 3.9, w: 5.85, h: 2.1, fontSize: 9.5 });
+  linkBlock(s, 0.6, 6.15, 0.85);
+  T(s, "Cheap kit. Clever inference. Answers in rupees.", { x: 6.4, y: 6.2, w: 6.35, h: 0.75, fontSize: 22, bold: true, color: DG, valign: "middle" });
+  s.addNotes("Every number traces to the Grundfos readouts, the CEA factor, indicative online prices, or our own simulation scripts. Close with the key message and the live link.");
 
   await pres.writeFile({ fileName: "PumpRupee_ANS_4X_Yuva_Yodha_Application.pptx" });
   console.log("written");
