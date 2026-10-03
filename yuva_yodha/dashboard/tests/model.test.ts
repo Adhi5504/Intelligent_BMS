@@ -52,3 +52,9 @@ describe("CSV upload and calibration", () => {
   });
   it("rejects too few rows", () => { const r2 = analyse(parseCsv("power_kw,discharge_bar\n9,3\n9,3").rows); expect(r2.ok).toBe(false); });
 });
+
+describe("CSV edge cases", () => {
+  it("handles Windows line endings and semicolons", () => { const p = parseCsv("power_kw;discharge_bar;suction_bar\r\n9.5;3.4;0.5\r\n9.1;3.5;0.5\r\n"); expect(p.rows.length).toBe(2); expect(p.rows[0].pdBar).toBeCloseTo(3.4); });
+  it("finds columns by name among extra columns", () => { const p = parseCsv("timestamp,Power (kW),Discharge Pressure (bar),Suction Pressure (bar)\n2026-10-01 00:00,9.5,3.4,0.5\n"); expect(p.rows.length).toBe(1); expect(p.rows[0].psBar).toBeCloseTo(0.5); });
+  it("skips rows outside plausible ranges (e.g. pressure in kPa)", () => { const p = parseCsv("power_kw,discharge_bar\n9.5,340\n9.4,3.3\n"); expect(p.rows.length).toBe(1); expect(p.skipped).toBe(1); });
+});

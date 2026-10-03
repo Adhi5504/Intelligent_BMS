@@ -155,13 +155,13 @@ export function LiveAudit() {
                 <YAxis hide domain={[0, 10]} />
                 <Tooltip contentStyle={tipStyle} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <ReferenceLine y={3} stroke="#F59E0B" strokeDasharray="4 4" label={{ value: "±3 pts (needs measured system curve)", fill: "#F59E0B", fontSize: 10, position: "insideTopRight" }} />
+                <ReferenceLine y={3} stroke="#F59E0B" strokeDasharray="4 4" />
                 <Bar dataKey="study" name="Study mean (5 pump cases × 8 trials)" fill="#3DCD58" radius={[4, 4, 0, 0]} label={{ position: "top", fill: "#1e293b", fontSize: 10 }} />
                 <Bar dataKey="demo" name="This single demo run" fill="#475569" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className="mt-2 text-xs text-slate-500">The demo run is one random draw and flatters the method; the study mean is the number to quote. Stress tests (3% noise, curve-shape error) raise learned-from-logs error to 10.5 points unless the system curve is measured.</p>
+          <p className="mt-2 text-xs text-slate-500"><b className="text-amber-700">Dashed line = ±3 points</b> (holds only with a measured system curve). The demo run is one random draw and flatters the method; the study mean is the number to quote. Stress tests (3% noise, curve-shape error) raise learned-from-logs error to 10.5 points unless the system curve is measured.</p>
         </Card>
       </div>
     </div>

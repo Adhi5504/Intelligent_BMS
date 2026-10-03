@@ -60,7 +60,7 @@ export function UploadLogs() {
           <div className="flex flex-wrap gap-2">
             <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1.5 rounded-lg bg-brandtext px-3 py-2 text-sm font-bold text-white hover:bg-[#14692b]"><FileUp size={14} />Choose CSV file</button>
             <button onClick={() => load(sample, "sample (simulated 14 days)")} className="rounded-lg border border-green-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900">Load sample data</button>
-            <button onClick={downloadSample} className="flex items-center gap-1.5 rounded-lg border border-green-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"><Download size={14} />Sample CSV</button>
+            {!import.meta.env.VITE_ARTIFACT && <button onClick={downloadSample} className="flex items-center gap-1.5 rounded-lg border border-green-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:text-slate-900"><Download size={14} />Sample CSV</button>}
           </div>
           {name && <div className="mt-3 flex items-center gap-2 text-xs text-slate-700"><ShieldCheck size={14} className="text-brandtext" />{busy ? "Calibrating…" : <>{rows.length} valid rows from <b>{name}</b></>}</div>}
           {notes.map((n) => <div key={n} className="mt-1 flex gap-1.5 text-xs text-amber-700"><TriangleAlert size={13} className="mt-0.5 shrink-0" />{n}</div>)}

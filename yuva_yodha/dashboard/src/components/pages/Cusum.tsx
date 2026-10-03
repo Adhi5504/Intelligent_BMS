@@ -53,12 +53,12 @@ export function Cusum() {
             <CardTitle right={<Tip>CUSUM = an alarm that notices slow drift. S_t = max(0, S_(t−1) + (x_t − μ₀ − k)). x_t is the daily wear estimate, μ₀ the mean of the first 14 days, k = 0.5σ, alarm when S_t exceeds h = 5σ (σ from the first 14 days). The chart shows S_t in units of σ.</Tip>}>CUSUM statistic S_t vs alarm threshold h</CardTitle>
             <div className="h-60">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={rows} margin={{ top: 8, right: 16, left: 0, bottom: 14 }}>
+                <LineChart data={rows} margin={{ top: 24, right: 16, left: 0, bottom: 20 }}>
                   <CartesianGrid />
-                  <XAxis dataKey="day" type="number" domain={[0, n - 1]} tick={{ fontSize: 11 }} label={{ value: "Day", position: "insideBottom", offset: -6, fill: "#475569", fontSize: 11 }} />
+                  <XAxis dataKey="day" type="number" domain={[0, n - 1]} tick={{ fontSize: 11 }} label={{ value: "Day", position: "insideBottom", offset: -14, fill: "#475569", fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} width={44} domain={[0, s.h * 4]} allowDataOverflow tickFormatter={(v) => `${v}σ`} />
                   <Tooltip contentStyle={tipStyle} formatter={(v: any) => `${Number(v).toFixed(2)}σ`} />
-                  <Legend />
+                  <Legend verticalAlign="top" height={22} />
                   <ReferenceLine y={s.h} stroke="#EF4444" strokeDasharray="5 4" label={{ value: `threshold h = ${s.h}σ`, fill: "#EF4444", fontSize: 11, position: "insideTopLeft" }} />
                   <ReferenceLine x={14} stroke="#475569" strokeDasharray="2 4" label={{ value: "baseline ends", fill: "#475569", fontSize: 10, position: "insideTopRight" }} />
                   {s.alarm !== null && <ReferenceLine x={s.alarm} stroke="#F59E0B" label={{ value: `alarm day ${s.alarm}`, fill: "#F59E0B", fontSize: 11, position: "top" }} />}

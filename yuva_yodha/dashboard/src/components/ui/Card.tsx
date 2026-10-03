@@ -2,7 +2,7 @@ import clsx from "clsx";
 import type { ReactNode } from "react";
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={clsx("rounded-xl border border-green-200 bg-white p-4 shadow-sm", className)}>{children}</div>;
+  return <div className={clsx("min-w-0 rounded-xl border border-green-200 bg-white p-4 shadow-sm", className)}>{children}</div>;
 }
 export function CardTitle({ icon, children, right }: { icon?: ReactNode; children: ReactNode; right?: ReactNode }) {
   return (

@@ -36,7 +36,7 @@ export function Verification() {
       <div className="grid gap-4 lg:grid-cols-5">
         <Card className="lg:col-span-3">
           <CardTitle icon={<ClipboardCheck size={14} />} right={<Badge variant="amber">SIMULATED</Badge>}>Measurement &amp; verification (IPMVP-style)</CardTitle>
-          <div className="overflow-x-auto">
+          <div className="max-w-full overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b border-green-300 text-left text-xs uppercase tracking-wide text-slate-500"><th className="py-2 pr-3">Metric</th><th className="px-3 text-right">Before</th><th className="px-3 text-right">After</th><th className="pl-3 text-right">Change</th></tr></thead>
               <tbody>
@@ -59,7 +59,7 @@ export function Verification() {
             </ResponsiveContainer>
           </div>
         </Card>
-        <div className="space-y-4 lg:col-span-2">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
           <Card>
             <CardTitle>How the saving would be verified</CardTitle>
             <ul className="space-y-2 text-xs text-slate-700">
