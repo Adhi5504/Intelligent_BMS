@@ -8,7 +8,7 @@ import { SimNote } from "../ui/SimNote";
 import { SliderField } from "../ui/SliderField";
 import { Tip } from "../ui/Tip";
 import { analyse, parseCsv, sampleCsv, UPLOAD_DEFAULTS, type LogRow, type UploadInputs } from "../../utils/calibrate";
-import { DATA, hNom, p1FixedSpeed } from "../../utils/pumpModel";
+import { DATA, H_RATED, Q_RATED, hNom } from "../../utils/pumpModel";
 import { inr, num } from "../../utils/format";
 
 const tipStyle = { background: "#FFFFFF", border: "1px solid #BFE3C8", borderRadius: 8, fontSize: 12 };
@@ -38,10 +38,12 @@ export function UploadLogs() {
   const chartRows = useMemo(() => {
     if (!res || !res.ok) return [];
     const out: any[] = [];
-    for (let q = 40; q <= 130; q += 2) out.push({ q, ds: hNom(q), cal: res.cal.sh * hNom(q) });
+    const k = (H_RATED - inp.hStatic) / (Q_RATED * Q_RATED);
+    for (let q = 40; q <= 130; q += 2) out.push({ q, ds: hNom(q), cal: res.cal.sh * hNom(q), sys: inp.hStatic + k * q * q });
     rows.forEach((_, i) => { if (i % 2 === 0) out.push({ q: res.cal.qInferred[i], pt: res.cal.heads[i] }); });
     return out.sort((a, b) => a.q - b.q);
-  }, [res, rows]);
+  }, [res, rows, inp.hStatic]);
+  const hasSuction = rows.some((r) => r.psBar != null);
   const pbVariant = res && res.ok ? (res.paybackMonths <= 12 ? "green" : res.paybackMonths <= 24 ? "amber" : "red") : "slate";
 
   return (
@@ -63,8 +65,11 @@ export function UploadLogs() {
           {name && <div className="mt-3 flex items-center gap-2 text-xs text-slate-700"><ShieldCheck size={14} className="text-brandtext" />{busy ? "Calibrating…" : <>{rows.length} valid rows from <b>{name}</b></>}</div>}
           {notes.map((n) => <div key={n} className="mt-1 flex gap-1.5 text-xs text-amber-700"><TriangleAlert size={13} className="mt-0.5 shrink-0" />{n}</div>)}
           <div className="mt-5 space-y-5">
-            <SliderField label="Suction pressure if not in the file" value={inp.psDefault} min={0} max={3} step={0.05} format={(v) => v.toFixed(2)} unit="bar" onChange={set("psDefault")} />
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Changes the pump fit (blue points, green curve)</div>
+            <SliderField label={hasSuction ? "Suction pressure (not used: the file has suction_bar)" : "Suction pressure (file has no suction column)"} value={inp.psDefault} min={0} max={3} step={0.05} format={(v) => v.toFixed(2)} unit="bar" onChange={set("psDefault")} />
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Changes the system curve and the saving forecast</div>
             <SliderField label="Static lift (assumed system curve)" value={inp.hStatic} min={5} max={25} step={1} unit="m" onChange={set("hStatic")} />
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Changes only the ₹ and payback numbers</div>
             <SliderField label="Operating hours per day" value={inp.hoursPerDay} min={4} max={24} step={1} unit="h" onChange={set("hoursPerDay")} />
             <SliderField label="Operating days per year" value={inp.daysPerYear} min={150} max={365} step={5} unit="days" onChange={set("daysPerYear")} />
             <SliderField label="Electricity tariff" value={inp.tariff} min={5} max={14} step={0.5} format={(v) => `₹${v.toFixed(1)}`} unit="/kWh" onChange={set("tariff")} />
@@ -92,7 +97,7 @@ export function UploadLogs() {
                 <Badge variant={pbVariant as any} className="!text-sm">{res.paybackMonths <= 12 ? "GO" : res.paybackMonths <= 24 ? "CONDITIONAL" : "NO-GO for now"}</Badge>
               </Card>
               <Card>
-                <CardTitle right={<Tip>Each blue point is a record: measured head plotted at the flow the calibrated model infers. The green line is the datasheet curve scaled by s_h. No flow meter is used.</Tip>}>Calibrated pump and inferred flow (head vs flow)</CardTitle>
+                <CardTitle right={<Tip>Blue points: measured head at the flow the calibrated model infers (no flow meter). Green: the datasheet curve scaled by s_h. Orange: the assumed system curve, which moves with the static-lift slider. Where the orange curve sits far below the pump curve, a throttle valve is burning the difference.</Tip>}>Calibrated pump, system curve and inferred flow</CardTitle>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={chartRows} margin={{ top: 8, right: 16, left: 0, bottom: 14 }}>
@@ -102,7 +107,8 @@ export function UploadLogs() {
                       <Tooltip contentStyle={tipStyle} formatter={(v: any) => Number(v).toFixed(2)} />
                       <Legend verticalAlign="top" height={26} />
                       <Line dataKey="ds" name="Datasheet fit" stroke="#94a3b8" strokeDasharray="5 4" dot={false} connectNulls isAnimationActive={false} />
-                      <Line dataKey="cal" name="Calibrated" stroke="#3DCD58" strokeWidth={2.5} dot={false} connectNulls isAnimationActive={false} />
+                      <Line dataKey="cal" name="Calibrated pump" stroke="#3DCD58" strokeWidth={2.5} dot={false} connectNulls isAnimationActive={false} />
+                      <Line dataKey="sys" name={`System curve (assumed ${inp.hStatic} m lift)`} stroke="#E07B00" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
                       <Scatter dataKey="pt" name="Your records" fill="#2563eb" isAnimationActive={false} />
                     </ComposedChart>
                   </ResponsiveContainer>
