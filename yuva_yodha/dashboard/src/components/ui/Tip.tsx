@@ -8,14 +8,14 @@ export function Tip({ children }: { children: ReactNode }) {
     <Tooltip.Provider delayDuration={100}>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <button type="button" aria-label="More information" className="inline-flex text-slate-400 hover:text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded">
+          <button type="button" aria-label="More information" className="inline-flex text-slate-600 hover:text-brandtext focus:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded">
             <Info size={14} />
           </button>
         </Tooltip.Trigger>
         <Tooltip.Portal>
-          <Tooltip.Content side="top" sideOffset={6} className="z-50 max-w-xs rounded-lg border border-navy-600 bg-navy-800 px-3 py-2 text-xs leading-relaxed text-slate-200 shadow-xl">
+          <Tooltip.Content side="top" sideOffset={6} className="z-50 max-w-xs rounded-lg border border-green-300 bg-mint px-3 py-2 text-xs leading-relaxed text-slate-800 shadow-xl">
             {children}
-            <Tooltip.Arrow className="fill-navy-800" />
+            <Tooltip.Arrow className="fill-white" />
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>

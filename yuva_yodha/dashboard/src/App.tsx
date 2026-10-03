@@ -25,9 +25,9 @@ export default function App() {
       <div className="no-print min-h-full">
         <Header />
         <Tabs.Root defaultValue="overview" className="mx-auto max-w-[1400px] px-4 pb-10">
-          <Tabs.List className="sticky top-0 z-20 -mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-navy-700 bg-navy-950/95 px-4 py-2 backdrop-blur" aria-label="Dashboard sections">
+          <Tabs.List className="sticky top-0 z-20 -mx-4 mb-4 flex gap-1 overflow-x-auto border-b border-green-200 bg-white/95 px-4 py-2 backdrop-blur" aria-label="Dashboard sections">
             {TABS.map((t) => (
-              <Tabs.Trigger key={t.id} value={t.id} className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-400 transition hover:text-white data-[state=active]:bg-brand data-[state=active]:text-navy-950">
+              <Tabs.Trigger key={t.id} value={t.id} className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:text-slate-900 data-[state=active]:bg-brandtext data-[state=active]:text-white">
                 <t.icon size={15} />{t.label}
               </Tabs.Trigger>
             ))}

@@ -2,11 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
+:root { color-scheme: light; }
 html, body, #root { height: 100%; }
-body { @apply bg-navy-950 text-slate-200 antialiased; font-family: Inter, system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
-.recharts-text { fill: #94a3b8; }
-.recharts-cartesian-grid line { stroke: #1e3355; }
+body { @apply bg-white text-slate-800 antialiased; font-family: Inter, system-ui, "Segoe UI", Roboto, Arial, sans-serif; }
+.recharts-text { fill: #475569; }
+.recharts-cartesian-grid line { stroke: #DCEFE1; }
+.recharts-legend-item-text { color: #334155 !important; }
 
 /* Print: show only the audit report */
 .print-only { display: none; }

@@ -11,7 +11,7 @@ import { num } from "../../utils/format";
 
 const C = DATA.cusum;
 type Key = keyof typeof C;
-const tipStyle = { background: "#12294D", border: "1px solid #244574", borderRadius: 8, fontSize: 12 };
+const tipStyle = { background: "#FFFFFF", border: "1px solid #244574", borderRadius: 8, fontSize: 12 };
 const NAMES: Record<Key, string> = { slow: "Slow wear", fast: "Fast wear", step: "Step wear", control: "No wear (control)" };
 
 export function Cusum() {
@@ -33,17 +33,17 @@ export function Cusum() {
           <CardTitle icon={<Radar size={14} />}>Scenario</CardTitle>
           <div className="space-y-1.5">
             {(Object.keys(C) as Key[]).map((k) => (
-              <button key={k} onClick={() => { setKey(k); setDay(C[k].S.length - 1); }} className={clsx("w-full rounded-lg border p-2.5 text-left", key === k ? "border-brand bg-brand/10" : "border-navy-600 hover:border-slate-400")}>
-                <div className="text-sm font-semibold text-white">{NAMES[k]}</div><div className="text-xs text-slate-400">{C[k].label.split(": ")[1]}</div>
+              <button key={k} onClick={() => { setKey(k); setDay(C[k].S.length - 1); }} className={clsx("w-full rounded-lg border p-2.5 text-left", key === k ? "border-brand bg-brand/10" : "border-green-300 hover:border-slate-400")}>
+                <div className="text-sm font-semibold text-slate-900">{NAMES[k]}</div><div className="text-xs text-slate-600">{C[k].label.split(": ")[1]}</div>
               </button>
             ))}
           </div>
-          <div className="mt-4"><label className="text-xs text-slate-400">Day {d}</label>
+          <div className="mt-4"><label className="text-xs text-slate-600">Day {d}</label>
             <input type="range" min={0} max={n - 1} value={d} onChange={(e) => setDay(+e.target.value)} className="w-full accent-[#3DCD58]" aria-label="Day" /></div>
           <div className="mt-3"><Badge variant={status.v === "red" ? "red" : status.v === "green" ? "green" : "slate"} className="!text-sm"><BellRing size={14} />{status.l}</Badge></div>
-          {alarmed && s.alarm !== null && <p className="mt-2 text-xs text-slate-300">Alarm on day <b>{s.alarm}</b> at true wear <b>{num(100 * (s.wearAtAlarm ?? 0), 1)}%</b>.</p>}
-          <div className="mt-4 rounded-lg border border-navy-600 bg-navy-800/70 p-2.5 text-xs text-slate-300">
-            <div className="mb-1 font-semibold text-white">Across {s.runs} simulated runs</div>
+          {alarmed && s.alarm !== null && <p className="mt-2 text-xs text-slate-700">Alarm on day <b>{s.alarm}</b> at true wear <b>{num(100 * (s.wearAtAlarm ?? 0), 1)}%</b>.</p>}
+          <div className="mt-4 rounded-lg border border-green-300 bg-mint p-2.5 text-xs text-slate-700">
+            <div className="mb-1 font-semibold text-slate-900">Across {s.runs} simulated runs</div>
             {key === "control" ? <>{hits.length} false alarm{hits.length === 1 ? "" : "s"} in {s.runs} × 365 days{hits.length ? ` (day ${hits.join(", ")})` : ""}.</> : <>Alarm days: {s.alarmsAllRuns.map((a) => a ?? "none").join(", ")}. Median wear at alarm ≈ {num(100 * (s.medianWearAtAlarm ?? 0), 1)}%.</>}
           </div>
         </Card>
@@ -55,12 +55,12 @@ export function Cusum() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={rows} margin={{ top: 8, right: 16, left: 0, bottom: 14 }}>
                   <CartesianGrid />
-                  <XAxis dataKey="day" type="number" domain={[0, n - 1]} tick={{ fontSize: 11 }} label={{ value: "Day", position: "insideBottom", offset: -6, fill: "#94a3b8", fontSize: 11 }} />
+                  <XAxis dataKey="day" type="number" domain={[0, n - 1]} tick={{ fontSize: 11 }} label={{ value: "Day", position: "insideBottom", offset: -6, fill: "#475569", fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} width={44} domain={[0, s.h * 4]} allowDataOverflow tickFormatter={(v) => `${v}σ`} />
                   <Tooltip contentStyle={tipStyle} formatter={(v: any) => `${Number(v).toFixed(2)}σ`} />
                   <Legend />
                   <ReferenceLine y={s.h} stroke="#EF4444" strokeDasharray="5 4" label={{ value: `threshold h = ${s.h}σ`, fill: "#EF4444", fontSize: 11, position: "insideTopLeft" }} />
-                  <ReferenceLine x={14} stroke="#94a3b8" strokeDasharray="2 4" label={{ value: "baseline ends", fill: "#94a3b8", fontSize: 10, position: "insideTopRight" }} />
+                  <ReferenceLine x={14} stroke="#475569" strokeDasharray="2 4" label={{ value: "baseline ends", fill: "#475569", fontSize: 10, position: "insideTopRight" }} />
                   {s.alarm !== null && <ReferenceLine x={s.alarm} stroke="#F59E0B" label={{ value: `alarm day ${s.alarm}`, fill: "#F59E0B", fontSize: 11, position: "top" }} />}
                   <Line dataKey="S" name="S_t (in units of σ, clipped at 20σ)" stroke="#3DCD58" strokeWidth={2.5} dot={false} isAnimationActive={false} />
                 </LineChart>

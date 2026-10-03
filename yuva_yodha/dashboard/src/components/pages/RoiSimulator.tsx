@@ -10,7 +10,7 @@ import { DEFAULTS, evaluate, paybackMonths, type ScenarioInput } from "../../uti
 import { inr, num } from "../../utils/format";
 import { modeLabel, useMode } from "../../utils/modeContext";
 
-const tipStyle = { background: "#12294D", border: "1px solid #244574", borderRadius: 8, fontSize: 12 };
+const tipStyle = { background: "#FFFFFF", border: "1px solid #244574", borderRadius: 8, fontSize: 12 };
 const PRESETS = [
   { name: "Oversized pump", peak: 80, lift: 10, note: "Peak demand 80% of rated flow, 10 m lift" },
   { name: "Base case", peak: 90, lift: 10, note: "Peak demand 90%, 10 m lift" },
@@ -49,7 +49,7 @@ export function RoiSimulator() {
           <CardTitle icon={<Calculator size={14} />}>Your pump and plant</CardTitle>
           <div className="mb-4 flex flex-wrap gap-1.5">
             {PRESETS.map((p) => (
-              <button key={p.name} title={p.note} onClick={() => { setPeak(p.peak); setLift(p.lift); }} className={clsx("rounded-md border px-2.5 py-1 text-xs font-semibold", peak === p.peak && lift === p.lift ? "border-brand bg-brand/10 text-brand" : "border-navy-600 text-slate-300 hover:text-white")}>{p.name}</button>
+              <button key={p.name} title={p.note} onClick={() => { setPeak(p.peak); setLift(p.lift); }} className={clsx("rounded-md border px-2.5 py-1 text-xs font-semibold", peak === p.peak && lift === p.lift ? "border-brand bg-brand/10 text-brandtext" : "border-green-300 text-slate-700 hover:text-slate-900")}>{p.name}</button>
             ))}
           </div>
           <div className="space-y-5">
@@ -65,16 +65,16 @@ export function RoiSimulator() {
         <div className="space-y-4 lg:col-span-3">
           {r.ok && verdict ? (
             <>
-              <div className={clsx("flex items-center gap-4 rounded-xl border-2 p-4", verdict.variant === "green" ? "border-brand bg-brand/10 text-brand" : verdict.variant === "amber" ? "border-warn bg-warn/10 text-warn" : "border-danger bg-danger/10 text-danger")}>
+              <div className={clsx("flex items-center gap-4 rounded-xl border-2 p-4", verdict.variant === "green" ? "border-brand bg-brand/10 text-brandtext" : verdict.variant === "amber" ? "border-warn bg-warn/10 text-amber-700" : "border-danger bg-danger/10 text-red-600")}>
                 <div className="[&>svg]:h-10 [&>svg]:w-10">{verdict.icon}</div>
                 <div>
                   <div className="text-2xl font-extrabold tracking-tight">{verdict.label}</div>
-                  <div className="text-sm text-slate-200">{verdict.sub} · {modeLabel(mode)}</div>
+                  <div className="text-sm text-slate-800">{verdict.sub} · {modeLabel(mode)}</div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[["Annual saving", inr(annual)], ["Monthly saving", inr(monthly)], ["Energy saved", `${num(r.savingPct[mode])}%`], ["CO₂ avoided", `${num(r.co2TYr[mode])} t/yr`]].map(([k, v]) => (
-                  <Card key={k} className="!p-3"><div className="text-[10px] uppercase tracking-wide text-slate-500">{k}</div><div className="text-lg font-bold text-white">{v}</div></Card>
+                  <Card key={k} className="!p-3"><div className="text-[10px] uppercase tracking-wide text-slate-500">{k}</div><div className="text-lg font-bold text-slate-900">{v}</div></Card>
                 ))}
               </div>
               <Card>
@@ -83,11 +83,11 @@ export function RoiSimulator() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chart} margin={{ top: 22, right: 16, left: 8, bottom: 22 }}>
                       <CartesianGrid />
-                      <XAxis dataKey="m" tick={{ fontSize: 11 }} label={{ value: "Months after installation", position: "insideBottom", offset: -12, fill: "#94a3b8", fontSize: 11 }} />
+                      <XAxis dataKey="m" tick={{ fontSize: 11 }} label={{ value: "Months after installation", position: "insideBottom", offset: -12, fill: "#475569", fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${v < 0 ? "-" : ""}${Math.abs(v / 1000).toFixed(0)}k`} width={44} />
                       <Tooltip contentStyle={tipStyle} formatter={(v: any) => inr(Number(v))} labelFormatter={(m) => `Month ${m}`} />
                       <Legend verticalAlign="top" height={24} />
-                      <ReferenceLine y={0} stroke="#94a3b8" />
+                      <ReferenceLine y={0} stroke="#475569" />
                       {isFinite(pb) && pb <= 36 && <ReferenceLine x={Math.round(pb)} stroke="#3DCD58" strokeDasharray="4 4" label={{ value: "break-even", fill: "#3DCD58", fontSize: 11, position: "insideBottomRight" }} />}
                       <Line dataKey="const" name="Constant pressure" stroke={mode === "const" ? "#3DCD58" : "#2f7d44"} strokeWidth={mode === "const" ? 3 : 1.5} dot={false} isAnimationActive={false} />
                       <Line dataKey="prop" name="Proportional pressure" stroke={mode === "prop" ? "#3DCD58" : "#60A5FA"} strokeWidth={mode === "prop" ? 3 : 1.5} dot={false} isAnimationActive={false} />
@@ -98,7 +98,7 @@ export function RoiSimulator() {
               </Card>
             </>
           ) : (
-            <Card className="border-danger/50"><div className="flex items-center gap-2 text-danger"><XCircle /><b>This combination is outside the model</b></div><p className="mt-2 text-sm text-slate-300">{!r.ok && r.reason}</p></Card>
+            <Card className="border-danger/50"><div className="flex items-center gap-2 text-red-600"><XCircle /><b>This combination is outside the model</b></div><p className="mt-2 text-sm text-slate-700">{!r.ok && r.reason}</p></Card>
           )}
         </div>
       </div>

@@ -18,20 +18,20 @@ export function ReportSheet() {
           {import.meta.env.VITE_ARTIFACT ? (
             <span className="self-center text-xs text-slate-500">Open the dashboard in its own browser tab or run it locally to print or save this report as PDF.</span>
           ) : (
-            <button onClick={() => window.print()} className="flex items-center gap-1.5 rounded-lg bg-[#0C1E3C] px-3 py-1.5 text-sm font-semibold text-white"><Printer size={14} />Print / Save as PDF</button>
+            <button onClick={() => window.print()} className="flex items-center gap-1.5 rounded-lg bg-[#1C8F3A] px-3 py-1.5 text-sm font-semibold text-white"><Printer size={14} />Print / Save as PDF</button>
           )}
           <button onClick={() => setReportOpen(false)} className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"><X size={14} />Close</button>
         </div>
         <div className="flex items-start justify-between border-b-4 border-[#3DCD58] pb-3">
           <div>
-            <div className="text-2xl font-extrabold text-[#0C1E3C]">PumpRupee · Executive Audit Report</div>
+            <div className="text-2xl font-extrabold text-[#14692b]">PumpRupee · Executive Audit Report</div>
             <div className="text-slate-600">Pump: Grundfos NB 65-160/157, 11 kW, IE3 · {today}</div>
           </div>
-          <div className="text-right text-xs text-slate-600"><div className="font-semibold text-[#0C1E3C]">Schneider Electric Yuva Yodha 2026</div><div>Smart Manufacturing · Team ANS_4X</div></div>
+          <div className="text-right text-xs text-slate-600"><div className="font-semibold text-[#14692b]">Schneider Electric Yuva Yodha 2026</div><div>Smart Manufacturing · Team ANS_4X</div></div>
         </div>
         <div className="my-3 rounded border border-amber-400 bg-amber-50 p-2 text-xs text-amber-900"><b>SIMULATED RESULTS.</b> Based on the Grundfos NB 65-160/157 curve fits and stated assumptions. No lab or field measurements. Prices are indicative online prices, not quotes.</div>
 
-        <h2 className="mt-3 text-base font-bold text-[#0C1E3C]">1. Headline ({modeLabel(mode)})</h2>
+        <h2 className="mt-3 text-base font-bold text-[#14692b]">1. Headline ({modeLabel(mode)})</h2>
         <ul className="list-disc pl-5">
           <li>Recoverable saving vs throttling: <b>{inr(r.savingRsYr[mode])}/year</b> ({num(r.savingPct[mode])}% of energy).</li>
           <li>SEC: {num(r.sec.base, 3)} → <b>{num(r.sec[mode], 3)} kWh/m³</b> (₹{num(r.rsPerM3.base, 2)} → ₹{num(r.rsPerM3[mode], 2)} per m³).</li>
@@ -39,7 +39,7 @@ export function ReportSheet() {
           <li>VFD payback: <b>{num(paybackMonths(CAPEX_LOW, r.savingRsYr[mode]))}–{num(paybackMonths(CAPEX_HIGH, r.savingRsYr[mode]))} months</b> for a total of {inr(CAPEX_LOW)}–{inr(CAPEX_HIGH)} (VFD + assumed ₹15,000 install).</li>
         </ul>
 
-        <h2 className="mt-3 text-base font-bold text-[#0C1E3C]">2. Recommended actions, cheapest first</h2>
+        <h2 className="mt-3 text-base font-bold text-[#14692b]">2. Recommended actions, cheapest first</h2>
         <ol className="list-decimal pl-5">
           <li>Check the strainer, lubrication and alignment (cheap, small share of waste).</li>
           <li>Decide on speed control (VFD) or impeller trim: the valve is 83–93% of the simulated waste.</li>
@@ -47,16 +47,16 @@ export function ReportSheet() {
           <li>Re-measure for 7–14 days and verify the saving as SEC.</li>
         </ol>
 
-        <h2 className="mt-3 text-base font-bold text-[#0C1E3C]">3. Before / after (simulated)</h2>
+        <h2 className="mt-3 text-base font-bold text-[#14692b]">3. Before / after (simulated)</h2>
         <table className="w-full border-collapse text-xs">
           <thead><tr className="bg-slate-100 text-left"><th className="border p-1.5">Metric</th><th className="border p-1.5 text-right">Before</th><th className="border p-1.5 text-right">After</th><th className="border p-1.5 text-right">Change</th></tr></thead>
           <tbody>{mv.rows.map((x) => <tr key={x.k}><td className="border p-1.5">{x.k}</td><td className="border p-1.5 text-right">{x.before}</td><td className="border p-1.5 text-right">{x.after}</td><td className="border p-1.5 text-right">{x.delta}</td></tr>)}</tbody>
         </table>
 
-        <h2 className="mt-3 text-base font-bold text-[#0C1E3C]">4. Assumptions</h2>
+        <h2 className="mt-3 text-base font-bold text-[#14692b]">4. Assumptions</h2>
         <p>Static lift {DEFAULTS.hStatic} m · head margin 5% · {DEFAULTS.hoursPerDay} h/day · {DEFAULTS.daysPerYear} days/yr · ₹{DEFAULTS.tariff}/kWh · VFD efficiency 0.97 · peak demand 90% of rated flow (114 m³/h) · assumed demand profile. Range across simulated cases: 8–33% (constant) and 15–45% (proportional); an energy-audit practitioner reports 5–40% in practice.</p>
 
-        <h2 className="mt-3 text-base font-bold text-[#0C1E3C]">5. Honest limits</h2>
+        <h2 className="mt-3 text-base font-bold text-[#14692b]">5. Honest limits</h2>
         <ul className="list-disc pl-5">
           <li>Simulation only; no lab or field data and no real quotes.</li>
           <li>About ±3 points forecast accuracy only with a measured system curve; otherwise about ±10.</li>
