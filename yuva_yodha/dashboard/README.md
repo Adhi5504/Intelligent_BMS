@@ -47,10 +47,10 @@ Or import the repo in the Vercel dashboard and set the **Root Directory** to `yu
 ## Structure
 ```
 src/
-  components/         Header, ModeToggle, ReportSheet, pages/ (6 tabs), ui/ (Radix-based Card, Badge, Tip, Slider, Modal, ...)
+  components/         Header, ModeToggle, ReportSheet, pages/ (7 tabs), ui/ (Radix-based Card, Badge, Tip, Slider, Modal, ...)
   data/generated.json simulation output (pump fits, 14-day telemetry, calibration, Shapley splits, CUSUM runs)
   types/              TypeScript types
-  utils/              pumpModel.ts (port of real_pump_sim.py), format.ts (Indian ₹ grouping), modeContext.tsx
+  utils/              pumpModel.ts (port of real_pump_sim.py), calibrate.ts (CSV parse + calibration), format.ts (Indian ₹ grouping), modeContext.tsx
 scripts/gen_data.py   regenerates generated.json from ../*.py (fixed seeds)  ->  npm run gen-data
 ```
 `src/utils/pumpModel.ts` reproduces the Python results exactly for the base case (19.3% / 35.5%, ₹69,292 / ₹1,27,178, paybacks 8.7 / 4.7 / 18.9 / 10.3 months).
@@ -62,3 +62,9 @@ scripts/gen_data.py   regenerates generated.json from ../*.py (fixed seeds)  -> 
 4. **VFD Payback Simulator**: sliders re-run the pump model live, GO / CONDITIONAL / NO-GO verdict.
 5. **CUSUM Wear Monitor**: stress-tested drift detection (slow, fast, step, control).
 6. **Before / After M&V**: IPMVP-style table and a printable executive report.
+7. **Upload Your Logs**: load a CSV (`power_kw`, `discharge_bar`, optional `suction_bar`); the browser calibrates the reference pump (head and power scales), infers flow, and prices the VFD saving and payback. Nothing leaves the browser. Valid for the reference pump only; the system curve is assumed.
+
+## Tests
+```bash
+npm test      # vitest: model matches the Python results, CSV parsing, calibration recovers the hidden pump scales
+```

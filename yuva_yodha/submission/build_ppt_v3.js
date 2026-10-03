@@ -88,20 +88,22 @@ async function icon(name, color = "FFFFFF") {
   const CV = JSON.parse(fs.readFileSync(__dirname + "/curves.json", "utf8"));
   const qr = await QRCode.toDataURL(LINK, { margin: 1, width: 360, color: { dark: "#0E5A32", light: "#FFFFFF" } });
   const img = (f) => "image/png;base64," + fs.readFileSync(SC + f + ".png").toString("base64");
+  const CROPS = JSON.parse(fs.readFileSync(SC + "crops.json", "utf8"));
   const ASPECT = { dash_1_overview: 1.6, dash_2_waste_split: 1.6, dash_3_vfd_payback: 1.6, dash_4_trends: 2160 / 1695 };
   const CSSW = 1440;
 
   /** browser frame + real screenshot + optional numbered callouts. Returns bottom y. */
   function shot(s, file, x, y, w, labels, tagText = "Working prototype dashboard · simulated data") {
-    const h = w / ASPECT[file], bar = 0.27;
+    const meta = CROPS[file];
+    const h = w / (meta ? meta.w / meta.h : ASPECT[file]), bar = 0.27;
     s.addShape(S.ROUNDED_RECTANGLE, { x, y, w, h: h + bar, rectRadius: 0.06, fill: { color: "FFFFFF" }, line: { color: DG, width: 1.5 } });
     s.addShape(S.RECTANGLE, { x: x + 0.02, y: y + 0.02, w: w - 0.04, h: bar - 0.02, fill: { color: "E3F2E7" }, line: { color: "E3F2E7", width: 0 } });
     [0, 1, 2].forEach((i) => s.addShape(S.OVAL, { x: x + 0.12 + i * 0.16, y: y + 0.08, w: 0.1, h: 0.1, fill: { color: ["EF4444", "F59E0B", "3DCD58"][i] }, line: { color: "FFFFFF", width: 0 } }));
     s.addShape(S.ROUNDED_RECTANGLE, { x: x + 0.7, y: y + 0.05, w: w - 1.0, h: 0.17, rectRadius: 0.08, fill: { color: "FFFFFF" }, line: { color: "BFE3C8", width: 0.5 } });
     T(s, "pumprupee-dashboard.vercel.app", { x: x + 0.7, y: y + 0.05, w: w - 1.0, h: 0.17, fontSize: 8, color: MUTED, align: "center", valign: "middle" });
     s.addImage({ data: img(file), x: x + 0.02, y: y + bar, w: w - 0.04, h: h - 0.02 * 0 });
-    const k = (w - 0.04) / CSSW;
-    (BOX[file] || []).forEach((b, i) => {
+    const k = (w - 0.04) / (meta ? meta.w : CSSW);
+    (meta ? meta.boxes : BOX[file] || []).forEach((b, i) => {
       if (!labels || !labels[i] || !b) return;
       const bx = x + 0.02 + b.x * k, by = y + bar + b.y * k, bw = b.w * k, bh = b.h * k;
       s.addShape(S.RECTANGLE, { x: bx, y: by, w: bw, h: bh, fill: { color: "FFFFFF", transparency: 100 }, line: { color: ORANGE, width: 2 } });
@@ -204,18 +206,20 @@ async function icon(name, color = "FFFFFF") {
   // ===== 5. KEY FEATURES & USER JOURNEY =====
   s = pres.addSlide({ masterName: "CONTENT" });
   head(s, "Key Features & User Journey", "Seven steps from clamp-on to a verified saving.");
-  const jr = [["FaPlug", "Clamp on", "Power clamp on the motor cable"], ["FaTools", "Fit sensors", "Pressure on existing gauge ports"], ["FaDatabase", "Log 7–14 days", "ESP32 records power + pressure"], ["FaClipboardList", "Open the dashboard", "₹ report by cause"],
+  const jr = [["FaPlug", "Clamp on", "Power clamp on the motor cable"], ["FaTools", "Fit sensors", "Pressure on existing gauge ports"], ["FaDatabase", "Log 7–14 days", "ESP32 saves a CSV of power + pressure"], ["FaClipboardList", "Upload to the dashboard", "₹ report by cause"],
     ["FaSlidersH", "Apply the fix", "Cheapest first; VFD verdict"], ["FaCheckCircle", "Re-measure", "Verify the saving"], ["FaRedo", "Move the kit", "Next pump"]];
   for (let i = 0; i < 7; i++) {
     const y = 1.4 + i * 0.54;
     await circ(s, 0.6, y, 0.46, jr[i][0], i === 3 ? ORANGE : DG);
     T(s, [{ text: jr[i][1] + "  ", options: { bold: true, fontSize: 13 } }, { text: jr[i][2], options: { fontSize: 11.5, color: MUTED } }], { x: 1.2, y, w: 4.3, h: 0.46, valign: "middle" });
   }
-  const chips5 = ["₹ waste by cause", "No flow meter", "No shutdown", "VFD verdict", "Verified savings", "Reusable kit"];
+  const chips5 = ["₹ waste by cause", "No flow meter", "No shutdown", "VFD verdict", "Upload your logs", "Reusable kit"];
   chips5.forEach((c, i) => tag(s, c, 0.6 + (i % 3) * 1.8, 5.3 + Math.floor(i / 3) * 0.4, 1.7, i % 2 ? "2E7D5B" : DG, "FFFFFF", 10.5));
   linkBlock(s, 0.6, 6.2, 0.72);
-  const b5 = shot(s, "dash_1_overview", 5.95, 1.4, 6.8, [1, 1, 1]);
-  legend(s, ["₹ saving per year with a VFD (simulated)", "VFD payback range", "Cheapest fix first, with the safe setpoint"], 5.95, b5 + 0.02, 6.8, 11);
+  const b5 = shot(s, "crop_kpis", 5.95, 1.4, 6.8, [1, 1, 1]);
+  legend(s, ["₹ saving per year with a VFD (simulated)", "Specific energy: before → after (kWh/m³)", "VFD payback range at ₹50,200–1,09,400"], 5.95, b5 + 0.04, 6.8, 11.5);
+  card(s, 5.95, 5.75, 6.8, 1.1, { fill: { color: LGREEN }, line: { color: GREEN, width: 2 } });
+  T(s, [{ text: "New: upload your own logs", options: { bold: true, fontSize: 15, color: DG, breakLine: true } }, { text: "Load a CSV of power and pressure; the dashboard calibrates the pump in your browser and prices the saving (slide 8).", options: { fontSize: 12 } }], { x: 6.1, y: 5.8, w: 6.5, h: 1.0, valign: "middle" });
   s.addNotes("Walk the numbered callouts on the dashboard: 1 the rupee saving, 2 the payback range, 3 the cheapest-fix-first order. Everything shown is simulated.");
 
   // ===== 6. TECHNICAL APPROACH =====
@@ -262,26 +266,38 @@ async function icon(name, color = "FFFFFF") {
   card(s, 4.7, 3.95, 2.45, 2.95, { fill: { color: LGREEN }, line: { color: GREEN, width: 1.5 } });
   T(s, "How flow is inferred", { x: 4.8, y: 4.0, w: 2.3, h: 0.3, fontSize: 12, bold: true, color: DG });
   T(s, bullets(["Head → flow from the pump curve H(Q)", "Power → shaft power via motor efficiency → flow", "Two scales, s_h and s_p, fitted from 7–14 days of logs", "Optional anchors: shut-off head, closed-valve power", "No flow meter used"], { paraSpaceAfter: 3 }), { x: 4.8, y: 4.32, w: 2.28, h: 2.55, fontSize: 10.5 });
-  const b6 = shot(s, "dash_4_trends", 7.5, 1.1, 5.25, [1, 1, 1]);
-  legend(s, ["14 days of ESP32 logs (simulated playback)", "Flow inferred from curve + power + head", "Calibration error vs study mean"], 7.5, b6 + 0.02, 5.25, 10.5);
-  T(s, "About ±3 points only with a measured system curve; otherwise about ±10.", { x: 7.5, y: b6 + 0.85, w: 5.25, h: 0.3, fontSize: 11, bold: true, color: DG });
+  const b6 = shot(s, "crop_curves", 7.5, 1.1, 5.25, [1, 1]);
+  legend(s, ["Choose datasheet-only or 1/3/7/14 days of logs", "Blue points: measured head at the flow the model infers (no flow meter)"], 7.5, b6 + 0.04, 5.25, 11);
+  T(s, "About ±3 points only with a measured system curve; otherwise about ±10.", { x: 7.5, y: b6 + 0.65, w: 5.25, h: 0.5, fontSize: 12, bold: true, color: DG });
   s.addNotes("Calibration: two scale factors (head, power) are fitted from 7-14 days of logs by profile likelihood; no flow meter. The system curve is the biggest error source, which is why the optional P3 sensor exists.");
 
   // ===== 7. PROTOTYPE & SIMULATED RESULTS =====
   s = pres.addSlide({ masterName: "CONTENT" });
   head(s, "Prototype & Simulated Results", null);
   tag(s, "SIMULATED – Grundfos NB 65-160/157, 11 kW · 10 m lift · 5% margin · 16 h/day · 300 days · ₹8/kWh", 0.6, 0.98, 9.3, ORANGE, "FFFFFF", 11);
-  const b7a = shot(s, "dash_2_waste_split", 0.75, 1.4, 5.5, [1, 1, 1]);
-  const b7b = shot(s, "dash_3_vfd_payback", 7.0, 1.4, 5.5, [1, 1, 1]);
-  legend(s, ["Valve is the largest share of waste", "₹/yr attributed to the wrong cause, by sensor tier", "Valve share is partly by construction"], 0.75, b7a + 0.02, 5.5, 10, 0.22);
-  legend(s, ["GO / NO-GO verdict for this pump", "Annual saving in ₹", "Break-even month"], 7.0, b7b + 0.02, 5.5, 10, 0.22);
-  const kp = [["₹69,292 / ₹1,27,178", "per year (constant / proportional)"], ["83–93%", "of waste is the valve"], ["4–19 months", "VFD payback, oversized pump"], ["±3 / ±10 pts", "with / without measured system curve"]];
-  kp.forEach((k, i) => {
-    const x = 0.6 + i * 3.077;
-    card(s, x, 6.32, 2.9, 0.68, { fill: { color: LGREEN }, line: { color: GREEN, width: 1.5 } });
-    T(s, [{ text: k[0], options: { bold: true, fontSize: 15, color: DG, breakLine: true } }, { text: k[1], options: { fontSize: 10 } }], { x: x + 0.1, y: 6.33, w: 2.7, h: 0.66, align: "center", valign: "middle" });
-  });
+  const b7a = shot(s, "crop_waste", 0.6, 1.4, 5.9, [1, 1, 1]);
+  const b7b = shot(s, "crop_roi", 6.9, 1.4, 4.85, [1, 1, 1]);
+  legend(s, ["Valve share of waste (Shapley split)", "₹ per year, by cause", "Valve share is partly by construction"], 0.6, b7a + 0.02, 5.9, 10.5, 0.22);
+  legend(s, ["GO / NO-GO verdict for this pump", "Annual saving in ₹", "Break-even month"], 6.9, b7b + 0.02, 4.85, 10.5, 0.22);
+  T(s, "₹69,292 / ₹1,27,178 per year  ·  valve 83–93% of waste  ·  payback 4–19 months  ·  ±3 / ±10 points", { x: 0.6, y: 6.84, w: 12.15, h: 0.22, fontSize: 11, bold: true, color: DG });
   s.addNotes("Screenshots are from the working prototype dashboard, simulated data. Forecast error: 1.4 points with a process-side sensor vs 10.5 points without, under stress. A +/-30% flow reading is worse than no calibration.");
+
+  // ===== 8. PROTOTYPE: UPLOAD YOUR LOGS =====
+  s = pres.addSlide({ masterName: "CONTENT" });
+  head(s, "Prototype: Upload Your Own Logs", "Not just a replay: the dashboard calibrates from a CSV you load.");
+  const b8 = shot(s, "crop_upload", 0.6, 1.4, 4.75, [1, 1, 1], "Working prototype · sample data");
+  const st8 = [["FaUpload", "Export a CSV", "power_kw, discharge_bar and optional suction_bar, from the ESP32 SD card or any logger."], ["FaShieldAlt", "Stays in your browser", "Nothing is uploaded to a server."],
+    ["FaCogs", "Calibrate and infer flow", "Fits a head scale and a power scale, then infers flow per record. No flow meter."], ["FaRupeeSign", "₹ saving and payback", "SEC, ₹/m³, VFD saving per year and payback for your tariff and VFD price."]];
+  for (let i = 0; i < 4; i++) {
+    const y = 1.4 + i * 1.0;
+    card(s, 5.7, y, 7.05, 0.88);
+    await circ(s, 5.82, y + 0.17, 0.52, st8[i][0]);
+    T(s, [{ text: st8[i][1], options: { bold: true, fontSize: 14, breakLine: true } }, { text: st8[i][2], options: { fontSize: 11.5, color: MUTED } }], { x: 6.5, y: y + 0.05, w: 6.15, h: 0.78, valign: "middle" });
+  }
+  legend(s, ["Calibrated pump scales found from the logs", "Forecast VFD saving, running cost, CO₂", "VFD payback and GO / NO-GO"], 5.7, 5.5, 7.05, 11.5);
+  card(s, 5.7, 6.4, 7.05, 0.55, { fill: { color: AMBER }, line: { color: ORANGE, width: 1.5 } });
+  T(s, "Limits: reference pump (Grundfos NB 65-160/157) only; system curve assumed, so about ±10 points unless measured.", { x: 5.8, y: 6.4, w: 6.85, h: 0.55, fontSize: 11, bold: true, color: ORANGE, valign: "middle" });
+  s.addNotes("On the sample file the calibration recovers the hidden pump scales (0.96, 1.05) and a forecast within 1 point of the simulated truth. That is a software test on simulated data, not a field result.");
 
   // ===== 8. INNOVATION =====
   s = pres.addSlide({ masterName: "CONTENT" });
@@ -326,7 +342,7 @@ async function icon(name, color = "FFFFFF") {
   // ===== 10. ROADMAP =====
   s = pres.addSlide({ masterName: "CONTENT" });
   head(s, "Implementation Roadmap", "What is done, what is next, and which limit each phase removes.");
-  const rm = [["Simulation + dashboard", "DONE", GREEN, DG, "Real Grundfos curve fits, stress tests, working web dashboard (simulated data).", "Limit removed: none yet"],
+  const rm = [["Simulation + dashboard", "DONE", GREEN, DG, "Real Grundfos curve fits, stress tests, working dashboard with CSV upload (simulated data).", "Limit removed: none yet"],
     ["Bench test", "NEXT", LORANGE, ORANGE, "Real pump, ESP32 kit and a reference flow meter.", "Removes: flow-inference accuracy, head = discharge − suction"],
     ["Pilot, 1–2 plants", "PLANNED", LINE, MUTED, "Measure the system curve on site; log 7–14 days.", "Removes: ±10 → ±3 points"],
     ["Validate forecast", "PLANNED", LINE, MUTED, "Compare the forecast with the measured saving after a fix.", "Removes: optimistic system-curve fit"],

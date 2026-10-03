@@ -1,11 +1,12 @@
 import * as Tabs from "@radix-ui/react-tabs";
-import { Activity, BarChart3, Calculator, ClipboardCheck, LayoutDashboard, Scale } from "lucide-react";
+import { Activity, BarChart3, Calculator, ClipboardCheck, LayoutDashboard, Scale, Upload } from "lucide-react";
 import { Header } from "./components/Header";
 import { ReportSheet } from "./components/ReportSheet";
 import { Cusum } from "./components/pages/Cusum";
 import { LiveAudit } from "./components/pages/LiveAudit";
 import { Overview } from "./components/pages/Overview";
 import { RoiSimulator } from "./components/pages/RoiSimulator";
+import { UploadLogs } from "./components/pages/UploadLogs";
 import { Shapley } from "./components/pages/Shapley";
 import { Verification } from "./components/pages/Verification";
 import { ModeProvider } from "./utils/modeContext";
@@ -13,6 +14,7 @@ import { ModeProvider } from "./utils/modeContext";
 const TABS = [
   { id: "overview", label: "Executive Overview", icon: LayoutDashboard, el: <Overview /> },
   { id: "live", label: "Live Audit & Flow Inference", icon: Activity, el: <LiveAudit /> },
+  { id: "upload", label: "Upload Your Logs", icon: Upload, el: <UploadLogs /> },
   { id: "waste", label: "Shapley Waste Split", icon: Scale, el: <Shapley /> },
   { id: "roi", label: "VFD Payback Simulator", icon: Calculator, el: <RoiSimulator /> },
   { id: "wear", label: "CUSUM Wear Monitor", icon: BarChart3, el: <Cusum /> },
