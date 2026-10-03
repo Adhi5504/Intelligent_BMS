@@ -31,7 +31,7 @@ export function Overview() {
       </SimNote>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat icon={<Banknote size={14} />} label="Recoverable saving with a VFD" accent="text-brand"
+        <Stat icon={<Banknote size={14} />} label="Recoverable saving with a VFD" accent="text-brandtext"
           value={`${inr(r.savingRsYr[mode])} / yr`}
           sub={<>{modeLabel(mode)} · {num(r.savingPct[mode])}% of energy. {modeLabel(other)}: {inr(r.savingRsYr[other])}/yr</>}
           tip={<Tip>This is the saving versus throttling at fixed speed, not the total electricity bill. Range across simulated cases: 8–33% (constant), 15–45% (proportional). An energy-audit practitioner reports 5–40% in practice.</Tip>} />
@@ -39,7 +39,7 @@ export function Overview() {
           value={<span>{num(r.sec.base, 3)} <span className="text-slate-500">→</span> <span className="text-brandtext">{num(r.sec[mode], 3)}</span> <span className="text-sm font-medium text-slate-600">kWh/m³</span></span>}
           sub={<>₹{num(r.rsPerM3.base, 2)}/m³ → ₹{num(r.rsPerM3[mode], 2)}/m³ at ₹8/kWh</>}
           tip={<Tip>SEC = units of electricity per m³ pumped. Same delivered volume ({Math.round(r.volPerDay)} m³/day) in every case.</Tip>} />
-        <Stat icon={<Leaf size={14} />} label="CO₂ reduction" accent="text-brand"
+        <Stat icon={<Leaf size={14} />} label="CO₂ reduction" accent="text-brandtext"
           value={`${num(r.co2TYr[mode])} t / yr`}
           sub={<>≈{Math.round(r.savingKwhYr[mode]).toLocaleString("en-IN")} kWh/yr at 0.710 kg CO₂/kWh (CEA v21.0). Range {num(r.co2TYr.const)}–{num(r.co2TYr.prop)} t</>} />
         <Stat icon={<Timer size={14} />} label="VFD payback" accent="text-slate-900"

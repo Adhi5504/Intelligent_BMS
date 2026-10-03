@@ -96,7 +96,7 @@ export function Shapley() {
           </div>
           <div className="text-xs text-slate-600">Rupees per year attributed to the <b>wrong cause</b> with this sensor set (this case).</div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-            <div className="rounded-lg border border-green-300 bg-mint p-2"><div className="text-[10px] uppercase text-slate-500">Removed vs S0</div><div className={clsx("font-mono text-lg font-semibold", cut > 0 ? "text-brand" : "text-slate-300")}>{tier === "S0" ? "baseline" : cut > 0 ? inr(cut) + "/yr" : cut === 0 ? "₹0" : "worse by " + inr(-cut)}</div></div>
+            <div className="rounded-lg border border-green-300 bg-mint p-2"><div className="text-[10px] uppercase text-slate-500">Removed vs S0</div><div className={clsx("font-mono text-lg font-semibold", cut > 0 ? "text-brandtext" : "text-slate-600")}>{tier === "S0" ? "baseline" : cut > 0 ? inr(cut) + "/yr" : cut === 0 ? "₹0" : "worse by " + inr(-cut)}</div></div>
             <div className="rounded-lg border border-green-300 bg-mint p-2"><div className="text-[10px] uppercase text-slate-500">Forecast error</div><div className="font-mono text-lg font-semibold text-slate-900">{stress.v}</div></div>
           </div>
           <p className="mt-1 text-[11px] text-slate-500">{stress.note}</p>
