@@ -240,10 +240,11 @@ async function icon(name, color = "FFFFFF") {
     { x: 0.6, y: 3.4, w: 6.55, h: 0.5, fontSize: 10.5 });
   card(s, 0.6, 3.95, 6.55, 2.95);
   T(s, "Grundfos NB 65-160/157 curves (fit to maker data)", { x: 0.72, y: 4.0, w: 6.3, h: 0.28, fontSize: 12, bold: true, color: DG });
-  const clip = (arr, mx) => arr.map((v) => (v == null || v > mx ? null : v));
+  const NQ = 7;   // Q = 10..70: every series is defined here, so the chart XML has no empty points (empty points make PowerPoint repair the file)
+  const qL = CV.Q.slice(0, NQ).map(String), clip = (arr) => arr.slice(0, NQ);
   s.addChart(pres.charts.LINE, [
-    { name: "Pump, full speed", labels: CV.Q.map(String), values: CV.pump }, { name: "System, valve open (assumed 10 m lift)", labels: CV.Q.map(String), values: CV.sys },
-    { name: "System, throttled", labels: CV.Q.map(String), values: clip(CV.thr, 40) }, { name: "Pump slowed by VFD (72%)", labels: CV.Q.map(String), values: clip(CV.vfd, 40) }],
+    { name: "Pump, full speed", labels: qL, values: clip(CV.pump) }, { name: "System, valve open (assumed 10 m lift)", labels: qL, values: clip(CV.sys) },
+    { name: "System, throttled", labels: qL, values: clip(CV.thr) }, { name: "Pump slowed by VFD (72%)", labels: qL, values: clip(CV.vfd) }],
     { x: 0.65, y: 4.25, w: 6.45, h: 2.35, chartColors: [DG, GREY, ORANGE, GREEN], lineSize: 2.5, lineDataSymbol: "none", lineDash: ["solid", "solid", "solid", "dash"], showLegend: true, legendPos: "r", legendFontSize: 9, legendFontFace: FONT,
       catAxisLabelFontSize: 9, valAxisLabelFontSize: 9, catAxisLabelFontFace: FONT, valAxisLabelFontFace: FONT, valGridLine: { color: "E6ECE8", size: 0.5 }, catGridLine: { style: "none" }, showCatAxisTitle: true, catAxisTitle: "Flow, m³/h", catAxisTitleFontSize: 9,
       showValAxisTitle: true, valAxisTitle: "Head, m", valAxisTitleFontSize: 9, valAxisMinVal: 0, valAxisMaxVal: 40 });
