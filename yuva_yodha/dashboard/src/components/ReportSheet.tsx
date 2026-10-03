@@ -15,7 +15,11 @@ export function ReportSheet() {
     <div className="report-overlay fixed inset-0 z-50 overflow-auto bg-black/80 p-4 print:p-0">
       <div className="report-sheet mx-auto max-w-3xl rounded-lg bg-white p-8 text-[13px] leading-relaxed text-slate-800 shadow-2xl">
         <div className="no-print mb-4 flex justify-end gap-2">
-          <button onClick={() => window.print()} className="flex items-center gap-1.5 rounded-lg bg-[#0C1E3C] px-3 py-1.5 text-sm font-semibold text-white"><Printer size={14} />Print / Save as PDF</button>
+          {import.meta.env.VITE_ARTIFACT ? (
+            <span className="self-center text-xs text-slate-500">Open the dashboard in its own browser tab or run it locally to print or save this report as PDF.</span>
+          ) : (
+            <button onClick={() => window.print()} className="flex items-center gap-1.5 rounded-lg bg-[#0C1E3C] px-3 py-1.5 text-sm font-semibold text-white"><Printer size={14} />Print / Save as PDF</button>
+          )}
           <button onClick={() => setReportOpen(false)} className="flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"><X size={14} />Close</button>
         </div>
         <div className="flex items-start justify-between border-b-4 border-[#3DCD58] pb-3">
