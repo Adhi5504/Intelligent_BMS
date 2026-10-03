@@ -151,22 +151,24 @@ async function icon(name, color = "FFFFFF") {
   // ===== 4. SOLUTION =====
   s = pres.addSlide({ masterName: "CONTENT" });
   head(s, "Our Solution: A ₹ Audit Kit", "A clamp-on kit turns power + pressure readings into “₹ wasted per year, and why”.");
-  skid(s, 0.7, 2.1, 0.95, true);
+  skid(s, 0.7, 2.0, 0.95, true);
+  T(s, "VFD = control speed instead of strangling the pipe.", { x: 0.7, y: 5.75, w: 6.5, h: 0.3, fontSize: 12, italic: true, color: MUTED });
   const outs = [["FaRupeeSign", "₹ waste per year", "Pump energy waste priced in rupees"], ["FaChartPie", "Waste by cause", "Valve, impeller wear, clogged strainer"],
     ["FaSlidersH", "Cheapest fix first + setpoint", "Lowest safe VFD setpoint"], ["FaSearchDollar", "VFD payback verdict", "For THIS pump, before capex"]];
   for (let i = 0; i < 4; i++) {
-    const y = 1.55 + i * 1.08;
-    card(s, 7.9, y, 4.85, 0.93);
-    await circ(s, 8.05, y + 0.15, 0.6, outs[i][0]);
-    T(s, [{ text: outs[i][1], options: { bold: true, fontSize: 17, breakLine: true } }, { text: outs[i][2], options: { fontSize: 13, color: MUTED } }], { x: 8.85, y: y + 0.1, w: 3.8, h: 0.75 });
+    const y = 1.5 + i * 0.95;
+    card(s, 7.9, y, 4.85, 0.82);
+    await circ(s, 8.05, y + 0.11, 0.6, outs[i][0]);
+    T(s, [{ text: outs[i][1], options: { bold: true, fontSize: 17, breakLine: true } }, { text: outs[i][2], options: { fontSize: 13, color: MUTED } }], { x: 8.85, y: y + 0.07, w: 3.8, h: 0.7 });
   }
-  T(s, "VFD = control speed instead of strangling the pipe.", { x: 7.9, y: 5.9, w: 4.85, h: 0.3, fontSize: 12, italic: true, color: MUTED });
-  banner(s, "Audits and recommends. Does not control the pump.", 6.25, 0.65, DG, 22);
-  s.addNotes("The kit is read-only: clamp on the motor cable, sensors on existing gauge ports. The owner keeps the data.");
+  card(s, 7.9, 5.3, 4.85, 0.88, { fill: { color: LGREEN }, line: { color: GREEN, width: 1.5 } });
+  T(s, [{ text: "No flow meter · no pipe cutting · no shutdown", options: { bold: true, fontSize: 12, breakLine: true } }, { text: "Sensors on existing gauge ports; owner keeps the data.", options: { fontSize: 12 } }], { x: 8.0, y: 5.33, w: 4.7, h: 0.82, valign: "middle" });
+  banner(s, "Audits and recommends. Does not control the pump.", 6.3, 0.65, DG, 22);
+  s.addNotes("The kit is read-only: clamp on the motor cable, sensors on existing gauge ports, installed by a plant electrician. Workflow: clamp, fit, log 7-14 days, read the rupee report, fix, verify, move the kit to the next pump.");
 
   // ===== 5. HOW IT WORKS =====
   s = pres.addSlide({ masterName: "CONTENT" });
-  head(s, "How It Works: Install & Pump Curve", "Clamp on, log for a week or two, and let the maths find the waste.");
+  head(s, "How It Works: Install & Pump Curve", "Clamp on, log for a week or two, and let the maths find the waste. Curves below are the real pump.");
   const bx = [["Motor", "Power clamp\n(CT on cable)", "3A4A45"], ["Pump", "P1 suction (optional)\nP2 discharge", "2E7D5B"], ["Throttle valve", "P3 process-side\n(optional)", ORANGE], ["Process", "", GREY]];
   bx.forEach((b, i) => {
     const x = 0.6 + i * 1.7;
@@ -184,22 +186,22 @@ async function icon(name, color = "FFFFFF") {
     T(s, [{ text: r[0] + "  ", options: { bold: true, color: DG } }, { text: r[1] }], { x: 0.75, y: 4.85 + i * 0.36, w: 6.3, h: 0.34, fontSize: 13 });
   });
   T(s, "System curve = what the pipe network demands.  Pump curve = what the pump can deliver at a given speed.", { x: 0.6, y: 6.1, w: 6.5, h: 0.6, fontSize: 12, italic: true, color: MUTED });
-  // chart: schematic curves
-  const Q = [0, 1, 2, 3, 4, 5, 6, 7], f = v => Math.round(v * 10) / 10;
-  const pump = Q.map(q => f(40 - 0.35 * q * q)), sysOpen = Q.map(q => f(12 + 0.12 * q * q)), sysThr = Q.map(q => f(12 + 0.428 * q * q)), vfd = Q.map(q => f(28.9 - 0.35 * q * q));
+  // chart: REAL Grundfos NB 65-160/157 fit + assumed system
+  const CV = {"Q": [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130], "pump": [33.1, 33.0, 32.8, 32.6, 32.3, 31.8, 31.2, 30.4, 29.4, 28.2, 26.7, 25.0, 22.9], "sys": [10.1, 10.5, 11.1, 12.0, 13.1, 14.5, 16.1, 17.9, 20.0, 22.4, 25.0, 27.8, 30.9], "thr": [10.6, 12.3, 15.2, 19.2, 24.3, 30.7, 38.1, 46.7, 56.5, 67.4, 79.4, 92.6, 106.9], "vfd": [17.1, 17.0, 16.8, 16.5, 16.1, 15.5, 14.7, 13.7, 12.3, null, null, null, null], "duty": 61.6, "hp": 31.7, "need": 15.4, "r": 0.718};
+  const clip = (arr, mx) => arr.map(v => (v == null || v > mx ? null : v));
   card(s, 7.35, 1.5, 5.4, 5.2);
-  T(s, "Throttled point vs VFD point (schematic)", { x: 7.5, y: 1.58, w: 5.1, h: 0.35, fontSize: 15, bold: true, color: DG });
+  T(s, "Grundfos NB 65-160/157: head vs flow", { x: 7.5, y: 1.58, w: 5.1, h: 0.35, fontSize: 15, bold: true, color: DG });
   s.addChart(pres.charts.LINE, [
-    { name: "Pump curve, full speed", labels: Q.map(String), values: pump }, { name: "System, valve open", labels: Q.map(String), values: sysOpen },
-    { name: "System, throttled", labels: Q.map(String), values: sysThr }, { name: "Pump curve, slowed by VFD", labels: Q.map(String), values: vfd }],
-    { x: 7.45, y: 1.95, w: 5.2, h: 3.4, chartColors: [DG, GREY, ORANGE, GREEN], lineSize: 3, lineDataSymbol: "none", lineDash: ["solid", "solid", "solid", "dash"],
+    { name: "Pump, full speed (fit to maker data)", labels: CV.Q.map(String), values: CV.pump }, { name: "System, valve open (assumed 10 m lift)", labels: CV.Q.map(String), values: CV.sys },
+    { name: "System, throttled", labels: CV.Q.map(String), values: clip(CV.thr, 40) }, { name: "Pump slowed by VFD (72% speed)", labels: CV.Q.map(String), values: clip(CV.vfd, 40) }],
+    { x: 7.45, y: 1.95, w: 5.2, h: 3.3, chartColors: [DG, GREY, ORANGE, GREEN], lineSize: 3, lineDataSymbol: "none", lineDash: ["solid", "solid", "solid", "dash"],
       showLegend: true, legendPos: "b", legendFontSize: 10, legendFontFace: FONT, catAxisLabelFontSize: 10, catAxisLabelFontFace: FONT, valAxisLabelFontSize: 10, valAxisLabelFontFace: FONT,
-      valGridLine: { color: "E6ECE8", size: 0.5 }, catGridLine: { style: "none" }, showCatAxisTitle: true, catAxisTitle: "Flow →", catAxisTitleFontSize: 11,
-      showValAxisTitle: true, valAxisTitle: "Head →", valAxisTitleFontSize: 11, valAxisMinVal: 0, valAxisMaxVal: 45 });
-  T(s, [{ text: "Same flow, two ways to get it.", options: { bold: true, fontSize: 13, breakLine: true } },
-    { text: "Throttled: pump pushes at full head, the valve burns the gap. VFD: the pump slows to just what the pipe needs. The gap is the wasted head, and it is priced in ₹.", options: { fontSize: 12 } }],
-    { x: 7.5, y: 5.4, w: 5.1, h: 1.25 });
-  s.addNotes("Curves are schematic and illustrative shapes, not the Grundfos data. Real fits are in the simulation scripts.");
+      valGridLine: { color: "E6ECE8", size: 0.5 }, catGridLine: { style: "none" }, showCatAxisTitle: true, catAxisTitle: "Flow, m³/h", catAxisTitleFontSize: 11,
+      showValAxisTitle: true, valAxisTitle: "Head, m", valAxisTitleFontSize: 11, valAxisMinVal: 0, valAxisMaxVal: 40 });
+  T(s, [{ text: "Off-peak hour (60% of peak demand, 61.6 m³/h)", options: { bold: true, fontSize: 13, breakLine: true } },
+    { text: "Throttled: the pump delivers 31.7 m, the pipe needs 15.4 m (incl. 5% margin). The valve burns the gap. VFD: slow to 72% speed. That gap is what PumpRupee prices in ₹.", options: { fontSize: 12 } }],
+    { x: 7.5, y: 5.3, w: 5.1, h: 1.35 });
+  s.addNotes("Pump curve = cubic fit to the 14 manufacturer points (Q 10-130 m3/h). System curve is an ASSUMPTION: 10 m static lift plus friction through the rated point. Throttled and VFD curves are computed from those with affinity laws. Simulated, not measured.");
 
   // ===== 6. ANALYTICS + ACCURACY =====
   s = pres.addSlide({ masterName: "CONTENT" });
@@ -296,7 +298,34 @@ async function icon(name, color = "FFFFFF") {
   banner(s, "A ~₹10k kit can stop a wrong ₹50k–1.1 lakh VFD buy, or unlock ₹69,292–1,27,178/yr (simulated)", 6.4, 0.55, DG, 14);//, 6.4, 0.55, DG, 16);
   s.addNotes("Arithmetic: 6,100/10 = 610 and 13,300/10 = 1,330. 365/14 = 26 and 365/7 = 52. 10,200/69,292 = 0.147 yr = 1.8 months. The kit payback is illustrative because it assumes the audit leads to the base-case VFD.");
 
-  // ===== 9. ECOSYSTEM FIT =====
+  // ===== 9. INNOVATION =====
+  s = pres.addSlide({ masterName: "CONTENT" });
+  head(s, "Innovation: What's New, and What Isn't", "We build on proven tools. The new part is the integration for MSMEs.");
+  card(s, 0.6, 1.5, 5.6, 3.95);
+  T(s, "Already exists (we build on it)", { x: 0.8, y: 1.58, w: 5.2, h: 0.4, fontSize: 17, bold: true, color: MUTED });
+  const exs = [["KSB PumpMeter", "pump monitoring"], ["US DOE PSAT", "pump-system assessment tool"], ["Samotics", "motor-current pump efficiency"], ["Schneider Altivar Process", "sensorless flow in the drive"],
+    ["EcoStruxure, Indian IoT vendors, ESCOs", "energy monitoring and audits"], ["Shapley split, CUSUM, calibration", "known methods, applied here"]];
+  exs.forEach((e, i) => {
+    const y = 2.05 + i * 0.55;
+    s.addShape(S.OVAL, { x: 0.82, y: y + 0.13, w: 0.18, h: 0.18, fill: { color: GREY }, line: { color: GREY, width: 0 } });
+    T(s, [{ text: e[0], options: { bold: true, fontSize: 13 } }, { text: "  " + e[1], options: { fontSize: 12, color: MUTED } }], { x: 1.15, y, w: 4.95, h: 0.5, valign: "middle" });
+  });
+  s.addShape(S.MATH_PLUS, { x: 6.33, y: 3.25, w: 0.5, h: 0.5, fill: { color: GREEN }, line: { color: GREEN, width: 0 } });
+  card(s, 6.95, 1.5, 5.8, 3.95, { fill: { color: LGREEN }, line: { color: GREEN, width: 2.5 } });
+  T(s, "What PumpRupee adds: five answers", { x: 7.15, y: 1.58, w: 5.4, h: 0.4, fontSize: 17, bold: true, color: DG });
+  const qa = [["How many ₹ is this pump wasting, and why?", "waste priced by cause"], ["Is an extra sensor worth buying?", "sensor value priced in ₹"], ["Will a VFD pay back for THIS pump?", "verdict before capex"],
+    ["Did the fix work?", "built-in before/after check"], ["Can an MSME afford it?", "₹6,100–13,300, no flow meter"]];
+  for (let i = 0; i < qa.length; i++) {
+    const y = 2.05 + i * 0.66;
+    s.addImage({ data: await icon("FaCheckCircle", DG), x: 7.15, y: y + 0.1, w: 0.3, h: 0.3 });
+    T(s, [{ text: qa[i][0], options: { bold: true, fontSize: 13, breakLine: true } }, { text: qa[i][1], options: { fontSize: 12, color: MUTED } }], { x: 7.6, y, w: 5.05, h: 0.58 });
+  }
+  card(s, 0.6, 5.6, 12.15, 1.3, { fill: { color: DG }, line: { color: DG, width: 0 } });
+  T(s, [{ text: "“What's new?”  Most tools tell you how a pump is running. PumpRupee tells an MSME owner what to buy, in rupees, before spending, and proves it afterwards.", options: { bold: true, fontSize: 17, color: "FFFFFF", breakLine: true, paraSpaceAfter: 6 } },
+    { text: "We found no low-cost shared kit that combines these. That is a search result, not proof that none exists.", options: { fontSize: 13, color: "CFE9D6" } }], { x: 0.85, y: 5.65, w: 11.65, h: 1.2, valign: "middle" });
+  s.addNotes("If asked about Altivar Process: it does sensorless flow inside the drive, which is great once the drive is bought. We help decide which pumps deserve one, and verify the saving after.");
+
+  // ===== 10. ECOSYSTEM FIT =====
   s = pres.addSlide({ masterName: "CONTENT" });
   head(s, "Ecosystem Fit: Audit → Drive → Verify", "PumpRupee is the low-cost front door to VFD and energy-management adoption.");
   const eda = [["FaPlug", "Electrify", "Makes motor electrical energy visible with a clamp-on power measurement and points owners to efficient drives."],
@@ -326,35 +355,6 @@ async function icon(name, color = "FFFFFF") {
     { text: "Concept only: no drive or platform integration built.", options: { fontSize: 11, italic: true, color: MUTED } }], { x: 8.35, y: 5.55, w: 4.3, h: 1.3, valign: "middle" });
   s.addNotes("Schneider products are named only as examples of where an audited MSME goes next. No integration claim.");
 
-  // ===== 10. EASE OF USE + SAFETY =====
-  s = pres.addSlide({ masterName: "CONTENT" });
-  head(s, "Ease of Use & Safety", "Clamp → Fit → Log → Read ₹ report → Fix → Verify.");
-  const wf = [["Clamp", "On the motor cable"], ["Fit", "Sensors on gauge ports"], ["Log", "7–14 days"], ["Read", "₹ report"], ["Fix", "Cheapest first"], ["Verify", "Re-measure"], ["Move", "Kit to next pump"]];
-  for (let i = 0; i < 7; i++) {
-    const x = 0.6 + i * 1.75;
-    card(s, x, 1.5, 1.6, 1.3);
-    s.addShape(S.OVAL, { x: x + 0.1, y: 1.58, w: 0.4, h: 0.4, fill: { color: DG }, line: { color: DG, width: 0 } });
-    T(s, String(i + 1), { x: x + 0.1, y: 1.58, w: 0.4, h: 0.4, fontSize: 15, bold: true, color: "FFFFFF", align: "center", valign: "middle" });
-    T(s, [{ text: wf[i][0], options: { bold: true, fontSize: 15, breakLine: true } }, { text: wf[i][1], options: { fontSize: 12, color: MUTED } }], { x: x + 0.1, y: 2.05, w: 1.42, h: 0.7 });
-    if (i < 6) arrow(s, x + 1.6, 2.0, 0.15, 0.22);
-  }
-  const no = ["A flow meter", "Pipe cutting", "Production shutdown", "Hydraulic expertise", "Reading graphs"];
-  card(s, 0.6, 3.05, 5.9, 3.85);
-  T(s, "The owner or technician does NOT need", { x: 0.75, y: 3.12, w: 5.6, h: 0.4, fontSize: 17, bold: true, color: DG });
-  for (let i = 0; i < no.length; i++) {
-    s.addImage({ data: ic.N, x: 0.8, y: 3.7 + i * 0.55, w: 0.34, h: 0.34 });
-    T(s, no[i], { x: 1.3, y: 3.65 + i * 0.55, w: 5, h: 0.45, fontSize: 16, valign: "middle" });
-  }
-  const sf = ["Non-invasive power clamp", "Pressure sensors on existing gauge ports", "Rated enclosure; installed by a plant electrician", "Kit only recommends, never controls the pump", "Owner keeps the data"];
-  card(s, 6.85, 3.05, 5.9, 3.85);
-  T(s, "Safety & reliability by design", { x: 7.0, y: 3.12, w: 5.6, h: 0.4, fontSize: 17, bold: true, color: DG });
-  for (let i = 0; i < sf.length; i++) {
-    s.addImage({ data: ic.Y, x: 7.05, y: 3.7 + i * 0.55, w: 0.34, h: 0.34 });
-    T(s, sf[i], { x: 7.55, y: 3.65 + i * 0.6, w: 5.1, h: 0.45, fontSize: 15, valign: "middle" });
-  }
-  T(s, "Closed-valve power / shut-off head anchors are optional, brief, and within the pump maker's limits.", { x: 7.0, y: 6.4, w: 5.6, h: 0.4, fontSize: 11, italic: true, color: MUTED });
-  s.addNotes("The workflow is a design intent. No hardware has been field-tested yet.");
-
   // ===== 11. IMPACT, SCALABILITY, ROADMAP =====
   s = pres.addSlide({ masterName: "CONTENT" });
   head(s, "Impact, Scalability & Roadmap", null);
@@ -366,51 +366,40 @@ async function icon(name, color = "FFFFFF") {
     T(s, [{ text: c[0], options: { bold: true, fontSize: i === 0 ? 15 : 14, color: DG, breakLine: true } }, { text: c[1], options: { fontSize: 11, color: MUTED } }], { x: x + 0.05, y: 1.65, w: 1.78, h: 1.14, align: "center", valign: "middle" });
   });
   T(s, [{ text: "Scale-up illustration, not a projection: ", options: { bold: true, color: DG } }, { text: "N pumps × per-pump saving. N = 10: ₹6,92,920–12,71,780/yr and 61–113 t CO₂/yr." }], { x: 0.8, y: 2.95, w: 5.8, h: 0.75, fontSize: 12 });
-  T(s, "Scalability", { x: 0.8, y: 3.75, w: 3, h: 0.3, fontSize: 14, bold: true, color: DG });
+  T(s, "Scalability", { x: 0.8, y: 3.8, w: 3, h: 0.3, fontSize: 14, bold: true, color: DG });
   ["Single pump", "Plant (shared kit)", "Cluster / ESCO / channel partner", "Bundled with VFD & EMS offers"].forEach((t, i) => {
-    const y = 4.1 + i * 0.42;
-    s.addShape(S.ROUNDED_RECTANGLE, { x: 0.8 + i * 0.25, y, w: 3.7, h: 0.36, rectRadius: 0.06, fill: { color: i === 0 ? GREEN : i === 1 ? "8ADB9B" : i === 2 ? "B8E8C2" : LGREEN }, line: { color: GREEN, width: 0.5 } });
-    T(s, t, { x: 0.9 + i * 0.25, y, w: 3.5, h: 0.36, fontSize: 12, bold: true, valign: "middle" });
+    const y = 4.15 + i * 0.45;
+    s.addShape(S.ROUNDED_RECTANGLE, { x: 0.8 + i * 0.25, y, w: 3.9, h: 0.38, rectRadius: 0.06, fill: { color: i === 0 ? GREEN : i === 1 ? "8ADB9B" : i === 2 ? "B8E8C2" : LGREEN }, line: { color: GREEN, width: 0.5 } });
+    T(s, t, { x: 0.9 + i * 0.25, y, w: 3.7, h: 0.38, fontSize: 12, bold: true, valign: "middle" });
   });
-  T(s, [{ text: "Applications: ", options: { bold: true, color: DG } }, { text: "MSME factories, water utilities, textile/dyeing, food processing, commercial HVAC chilled-water pumps. Agricultural pumping: future scope only." }], { x: 0.8, y: 5.85, w: 5.8, h: 1.0, fontSize: 12 });
+  T(s, "For: MSME factories, water utilities, textile, food processing, HVAC chilled water.", { x: 0.8, y: 6.05, w: 5.8, h: 0.8, fontSize: 12, color: MUTED });
   card(s, 6.9, 1.5, 5.85, 5.45);
   T(s, "Roadmap", { x: 7.05, y: 1.57, w: 3, h: 0.3, fontSize: 15, bold: true, color: DG });
   [["Simulation", "DONE", GREEN, DG], ["Bench test, real pump + sensors", "NEXT", LORANGE, ORANGE], ["Pilot, 1–2 plants, measured system curve", "PLANNED", LINE, MUTED], ["Validate forecast error", "PLANNED", LINE, MUTED], ["Multi-pump / multi-plant rollout", "PLANNED", LINE, MUTED]].forEach((r, i) => {
-    const y = 1.95 + i * 0.5;
+    const y = 1.95 + i * 0.47;
     T(s, (i + 1) + ".  " + r[0], { x: 7.05, y, w: 4.35, h: 0.42, fontSize: 13, valign: "middle" });
     tag(s, r[1], 11.5, y + 0.04, 1.1, r[2], r[3], 10);
   });
-  T(s, "Validation status", { x: 7.05, y: 4.55, w: 3, h: 0.3, fontSize: 15, bold: true, color: DG });
-  card(s, 7.05, 4.9, 2.75, 1.95, { fill: { color: AMBER }, line: { color: ORANGE, width: 1.5 } });
-  T(s, [{ text: "SIMULATED / DESIGNED", options: { bold: true, fontSize: 11, color: ORANGE, breakLine: true } }, { text: "Savings, waste split, calibration, drift detection, cost estimates", options: { fontSize: 12 } }], { x: 7.15, y: 4.95, w: 2.55, h: 1.85 });
-  card(s, 9.95, 4.9, 2.65, 1.95, { fill: { color: "EEF4F0" }, line: { color: GREY, width: 1.5 } });
-  T(s, [{ text: "TO BE TESTED", options: { bold: true, fontSize: 11, color: MUTED, breakLine: true } }, { text: "Flow inference vs a reference meter; throttled-valve and blocked-strainer cases; wear drift; pilots; before/after VFD saving", options: { fontSize: 11 } }], { x: 10.05, y: 4.95, w: 2.45, h: 1.85 });
-  s.addNotes("ACTUALLY TESTED: nothing yet, no hardware or field data. Say this out loud.");
+  card(s, 7.05, 4.4, 5.55, 2.4, { fill: { color: AMBER }, line: { color: ORANGE, width: 2 } });
+  T(s, "Honest limits. Actually tested: nothing yet.", { x: 7.2, y: 4.45, w: 5.3, h: 0.3, fontSize: 14, bold: true, color: ORANGE });
+  T(s, bullets(["Simulation only: no lab/field data, no real quotes", "System-curve fit is optimistic (same form as the simulated plant)", "Single pump, steady state; no parallel pumps, closed loops, drives, NPSH or control dynamics", "Valve share partly by construction; 54–60% is an upper bound"]),
+    { x: 7.2, y: 4.8, w: 5.3, h: 1.95, fontSize: 12 });
+  s.addNotes("ACTUALLY TESTED: nothing yet. Simulated/designed: savings, waste split, calibration, drift detection, cost estimates. To be tested: flow inference vs a reference meter, throttled-valve and blocked-strainer cases, wear drift, pilots, before/after VFD saving.");
 
-  // ===== 12. ONE-VISUAL SUMMARY =====
+  // ===== 12. TEAM =====
   s = pres.addSlide({ masterName: "CONTENT" });
-  head(s, "PumpRupee on One Page", "Cheap kit. Clever inference. Answers in rupees. Honest about limits.");
-  const sm = [["FaFaucet", "Oversized pump, throttled valve", ORANGE], ["FaPlug", "Clamp-on kit\n₹6,100–13,300", DG], ["FaRupeeSign", "₹ report by cause", DG], ["FaSearchDollar", "VFD verdict\nGO or WAIT", DG], ["FaCheckCircle", "Verified before/after saving", DG]];
-  for (let i = 0; i < 5; i++) {
-    const x = 0.6 + i * 2.46;
-    card(s, x, 1.5, 2.2, 1.7);
-    await circ(s, x + 0.8, 1.6, 0.6, sm[i][0], sm[i][2]);
-    T(s, sm[i][1], { x: x + 0.1, y: 2.3, w: 2.0, h: 0.85, fontSize: 14, bold: true, align: "center" });
-    if (i < 4) arrow(s, x + 2.22, 2.3, 0.22, 0.28);
-  }
-  const kt = [["19.3–35.5%", "VFD saving, base case"], ["₹69,292–1,27,178", "per year, per 11 kW pump"], ["4–19 mo vs 2–4+ yr", "payback: oversized vs right-sized"], ["≈ ±3 points", "only with a measured system curve; else ≈ ±10"]];
-  kt.forEach((k, i) => {
+  head(s, "Team ANS_4X", "Schneider Electric Yuva Yodha 2026  |  Smart Manufacturing  |  [Institution]");
+  for (let i = 0; i < 4; i++) {
     const x = 0.6 + i * 3.077;
-    card(s, x, 3.4, 2.9, 1.3, { fill: { color: LGREEN }, line: { color: GREEN, width: 1.5 } });
-    T(s, [{ text: k[0], options: { bold: true, fontSize: i === 0 ? 24 : i === 1 ? 19 : 17, color: DG, breakLine: true } }, { text: k[1], options: { fontSize: 12 } }], { x: x + 0.12, y: 3.42, w: 2.66, h: 1.26, valign: "middle", align: "center" });
-  });
-  T(s, "All SIMULATED (Grundfos NB 65-160/157, 11 kW; 10 m lift, 5% margin, 16 h/day, 300 days, ₹8/kWh).", { x: 0.6, y: 4.75, w: 12, h: 0.3, fontSize: 12, italic: true, color: MUTED });
-  card(s, 0.6, 5.15, 12.15, 1.85, { fill: { color: AMBER }, line: { color: ORANGE, width: 2 } });
-  T(s, "Honest limits: what we validate next", { x: 0.8, y: 5.2, w: 6, h: 0.3, fontSize: 14, bold: true, color: ORANGE });
-  T(s, bullets(["Simulation only: no lab/field data, no real quotes", "System-curve fit uses the simulated plant's own form, so it is optimistic",
-    "Single pump, steady state. Out of scope: parallel pumps, closed loops, pumps already on drives, minimum-flow/NPSH, control dynamics", "Part of the valve share is by construction; 54–60% is an upper bound"]),
-    { x: 0.85, y: 5.55, w: 11.7, h: 1.4, fontSize: 12 });
-  s.addNotes("Close with: cheap kit, clever inference, answers in rupees, honest about limits, brings VFD savings to MSMEs that never get audited.");
+    card(s, x, 1.55, 2.9, 3.9);
+    s.addShape(S.OVAL, { x: x + 0.75, y: 1.75, w: 1.4, h: 1.4, fill: { color: LGREEN }, line: { color: GREEN, width: 2 } });
+    s.addImage({ data: await icon("FaUser", GREEN), x: x + 1.08, y: 2.08, w: 0.74, h: 0.74 });
+    T(s, [{ text: "[Name]", options: { bold: true, fontSize: 20, breakLine: true, paraSpaceAfter: 4 } }, { text: "[Role]", options: { fontSize: 15, color: DG, bold: true, breakLine: true, paraSpaceAfter: 8 } },
+      { text: "[Skill: one line relevant to pumps, sensors, data or energy]", options: { fontSize: 13, color: MUTED } }], { x: x + 0.15, y: 3.35, w: 2.6, h: 2.0, align: "center" });
+  }
+  banner(s, "Cheap kit. Clever inference. Answers in rupees. Honest about limits.", 5.85, 0.8, DG, 24);
+  T(s, "Replace the photo circles and [placeholders]; delete unused cards (1–4 members).", { x: 0.6, y: 6.75, w: 12, h: 0.3, fontSize: 12, italic: true, color: MUTED });
+  s.addNotes("Close with the key message, then the ask: a pilot plant and a reference flow meter for the bench test.");
 
   await pres.writeFile({ fileName: "PumpRupee_ANS_4X_Yuva_Yodha.pptx" });
   console.log("written");
